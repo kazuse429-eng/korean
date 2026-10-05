@@ -62,6 +62,8 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
 .icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tiger{flex:none;display:block}
+.talk .tiger,.namecard .tiger{animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
 
 /* ヘッダー */
 .head{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -77,7 +79,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .bar i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .3s}
 
 /* マスコットと吹き出し */
-.talk{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.talk{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
 .bubble{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px;display:grid;gap:2px}
 .bubble::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:var(--surface);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateY(-50%) rotate(45deg)}
 .bubble .who{font-weight:700}
@@ -188,6 +190,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs id="mdefs"></defs>
   <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 1-1 2-3 2-5z"/><path d="M12 21a7 7 0 0 0 7-7c0-2-1-4-2-5"/><path d="M5 14a7 7 0 0 0 7 7"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.500"/><circle cx="12" cy="12" r="6.500"/><path stroke-width="3.200" d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3M5.300 5.300l2.100 2.100M16.600 16.600l2.100 2.100M5.300 18.700l2.100-2.100M16.600 7.400l2.100-2.100"/></symbol>
   <symbol id="i-say" viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.500 8.500a5 5 0 0 1 0 7"/><path d="M19 6a8.500 8.500 0 0 1 0 12"/></symbol>
@@ -490,19 +493,65 @@ const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: red
 const themeOf = ui => ui < 4 ? 0 : ui < 8 ? 1 : ui < 14 ? 2 : 3;
 const DECO = ["아", "가", "까", "한", "안", "저", "이", "일", "는", "있", "해", "안", "었", "왜", "주", "시", "가", "길", "싶", "말"];
 
-// マスコット（虎の子）。mood: normal / happy / cheer
+// マスコット（虎の子）。自作のSVG。build.py が app.html に埋め込む。絵だけを見るには: python mascot_preview.py
+//   tiger(mood, size): mood = "normal"（手を振る）/ "happy"（ばんざい）/ "cheer"（こぶしを上げて励ます）
+//   size が小さい（70未満）ときは顔だけ、大きいときは全身を描く。
+//   グラデーションの定義 MASCOT_DEFS はページに1回だけ置く（app.html の先頭の隠し svg）。
+const MASCOT_DEFS = `
+  <radialGradient id="tg-fur" cx="42%" cy="32%" r="80%"><stop offset="0" stop-color="#ffc463"/><stop offset=".55" stop-color="#f9a23a"/><stop offset="1" stop-color="#e67e1c"/></radialGradient>
+  <radialGradient id="tg-cream" cx="45%" cy="30%" r="85%"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#fbe6c4"/></radialGradient>
+  <radialGradient id="tg-eye" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#5a3a26"/><stop offset="1" stop-color="#1f120a"/></radialGradient>
+  <linearGradient id="tg-ear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd2c0"/><stop offset="1" stop-color="#f7a58e"/></linearGradient>`;
+
 function tiger(mood, size){
-  const K = `fill="none" stroke="#3a2a1a" stroke-width="3.500" stroke-linecap="round"`;
-  const eyes = mood === "happy" ? `<path d="M29 47q6-7 12 0M59 47q6-7 12 0" ${K}/>`
-    : `<circle cx="35" cy="45" r="4.500" fill="#3a2a1a"/><circle cx="65" cy="45" r="4.500" fill="#3a2a1a"/>` + (mood === "cheer" ? `<path d="M27 35l13 4M73 35l-13 4" ${K}/>` : "");
-  const mouth = mood === "happy" ? `<path d="M41 64q9 13 18 0z" fill="#b5452f"/>` : mood === "cheer" ? `<ellipse cx="50" cy="68" rx="5" ry="4.500" fill="#b5452f"/>` : `<path d="M43 65q7 6 14 0" ${K}/>`;
-  return `<svg class="tiger" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
-    <circle cx="21" cy="23" r="14" fill="#f2a03d"/><circle cx="79" cy="23" r="14" fill="#f2a03d"/><circle cx="21" cy="23" r="6.500" fill="#fde2c4"/><circle cx="79" cy="23" r="6.500" fill="#fde2c4"/>
-    <ellipse cx="50" cy="54" rx="41" ry="37" fill="#f2a03d"/>
-    <path d="M50 18v11M37 20l3 10M63 20l-3 10M10 52h10M12 65l9-3M90 52H80M88 65l-9-3" ${K}/>
-    <ellipse cx="50" cy="66" rx="21" ry="16" fill="#fff3dc"/><circle cx="24" cy="60" r="6" fill="#f47c6a" opacity=".45"/><circle cx="76" cy="60" r="6" fill="#f47c6a" opacity=".45"/>
-    <path d="M44 55h12l-6 7z" fill="#3a2a1a"/>${eyes}${mouth}</svg>`;
+  const INK = "#4a2a14", S = `fill="none" stroke="${INK}" stroke-linecap="round" stroke-linejoin="round"`;
+  const full = size >= 70;
+  // 目
+  const eye = x => `<ellipse cx="${x}" cy="93" rx="9.500" ry="12" fill="url(#tg-eye)"/><circle cx="${x + 3.500}" cy="88" r="4" fill="#fff"/><circle cx="${x - 3.500}" cy="98" r="1.800" fill="#fff" opacity=".9"/>`;
+  const eyes = mood === "happy" ? `<path d="M62 96q12-15 24 0M114 96q12-15 24 0" ${S} stroke-width="5.500"/>`
+    : eye(74) + eye(126) + (mood === "cheer" ? `<path d="M62 77q10-7 21-3M138 77q-10-7-21-3" ${S} stroke-width="4.500"/>` : "");
+  // 口
+  const mouth = mood === "happy"
+    ? `<path d="M84 117q16 4 32 0q-2 19-16 19q-14 0-16-19z" fill="#7d2b1c"/><path d="M90 130q10-7 20 0q-4 6-10 6q-6 0-10-6z" fill="#ff9a8a"/>`
+    : mood === "cheer" ? `<path d="M100 113v4" ${S} stroke-width="3.500"/><ellipse cx="100" cy="124" rx="7" ry="6.500" fill="#7d2b1c"/><ellipse cx="100" cy="127" rx="4" ry="2.500" fill="#ff9a8a"/>`
+    : `<path d="M100 113v5M100 118q-7 9-15 3M100 118q7 9 15 3" ${S} stroke-width="3.500"/>`;
+  // 頭（耳 → 頭 → 白い頬とマズル → しま → 顔）
+  const head = `
+    <circle cx="46" cy="38" r="22" fill="url(#tg-fur)"/><circle cx="154" cy="38" r="22" fill="url(#tg-fur)"/>
+    <circle cx="46" cy="40" r="12" fill="url(#tg-ear)"/><circle cx="154" cy="40" r="12" fill="url(#tg-ear)"/>
+    <ellipse cx="100" cy="90" rx="72" ry="63" fill="url(#tg-fur)"/>
+    <path d="M33 104q-14 10-8 22q14-2 20 6q22 16 55 16q33 0 55-16q6-8 20-6q6-12-8-22q-20 14-67 14q-47 0-67-14z" fill="url(#tg-cream)"/>
+    <ellipse cx="100" cy="118" rx="33" ry="24" fill="url(#tg-cream)"/>
+    <g fill="${INK}">
+      <path d="M100 28q7 12 4 26q-4 5-8 0q-3-14 4-26z"/><path d="M76 33q9 9 9 22q-3 5-8 2q-6-11-1-24z"/><path d="M124 33q-9 9-9 22q3 5 8 2q6-11 1-24z"/>
+      <path d="M29 78q13 0 22 8q-11 5-23 1z"/><path d="M171 78q-13 0-22 8q11 5 23 1z"/>
+    </g>
+    <ellipse cx="55" cy="114" rx="11" ry="7" fill="#ff8a73" opacity=".5"/><ellipse cx="145" cy="114" rx="11" ry="7" fill="#ff8a73" opacity=".5"/>
+    ${eyes}
+    <path d="M91 104q9-5 18 0q-1 8-9 10q-8-2-9-10z" fill="#6b3a1e"/><ellipse cx="97" cy="105" rx="3" ry="1.500" fill="#fff" opacity=".45"/>
+    ${mouth}`;
+  if(!full) return `<svg class="tiger" width="${size}" height="${size}" viewBox="14 6 172 172" aria-hidden="true">${head}</svg>`;
+  // 腕: [付け根x, 付け根y, 角度]。手先に肉球
+  const arm = (x, y, deg) => `<g transform="translate(${x} ${y}) rotate(${deg})"><ellipse cx="0" cy="-17" rx="12" ry="22" fill="url(#tg-fur)"/><path d="M-11 -18q11 5 22 0" ${S} stroke-width="4"/><ellipse cx="0" cy="-31" rx="7" ry="5.500" fill="url(#tg-cream)"/></g>`;
+  // 角度は「真上が0、時計回りが正」。下ろした腕は200°前後
+  const arms = mood === "happy" ? arm(62, 164, -52) + arm(138, 164, 52)
+    : mood === "cheer" ? arm(64, 160, 208) + arm(140, 166, 24)
+    : arm(64, 160, 205) + arm(139, 165, 48);
+  return `<svg class="tiger" width="${size}" height="${size * 1.150}" viewBox="0 0 200 230" aria-hidden="true">
+    <ellipse cx="100" cy="221" rx="54" ry="7" fill="#000" opacity=".12"/>
+    <path d="M132 206q42 8 47-16q1-13-11-14" fill="none" stroke="#f39a30" stroke-width="15" stroke-linecap="round"/>
+    <path d="M132 206q42 8 47-16q1-13-11-14" fill="none" stroke="${INK}" stroke-width="15.500" stroke-dasharray="5 12" stroke-dashoffset="-22"/>
+    <circle cx="168" cy="176" r="7.700" fill="${INK}"/>
+    <ellipse cx="78" cy="212" rx="21" ry="11" fill="#ee8c26"/><ellipse cx="122" cy="212" rx="21" ry="11" fill="#ee8c26"/>
+    <ellipse cx="74" cy="214" rx="10" ry="5" fill="url(#tg-cream)"/><ellipse cx="126" cy="214" rx="10" ry="5" fill="url(#tg-cream)"/>
+    <ellipse cx="100" cy="178" rx="44" ry="40" fill="url(#tg-fur)"/>
+    <ellipse cx="100" cy="186" rx="27" ry="28" fill="url(#tg-cream)"/>
+    <g fill="${INK}"><path d="M57 172q11 1 17 7q-9 3-17-1z"/><path d="M143 172q-11 1-17 7q9 3 17-1z"/><path d="M60 190q10 0 15 5q-8 3-14 0z"/><path d="M140 190q-10 0-15 5q8 3 14 0z"/></g>
+    ${arms}${head}</svg>`;
 }
+if (typeof module !== "undefined") module.exports = { tiger, MASCOT_DEFS };
+
+document.getElementById("mdefs").innerHTML = MASCOT_DEFS;
 const ring = (pct, size) => `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="15" fill="none" stroke-width="5"/><circle class="fg" cx="18" cy="18" r="15" fill="none" stroke-width="5" stroke-linecap="round" pathLength="100" stroke-dasharray="${Math.max(0, Math.min(100, pct))} 100"/></svg>`;
 
 // ---------- 音声（端末の読み上げ機能。韓国語の声が無い端末では聞き取り問題を出さない） ----------
@@ -521,7 +570,7 @@ let view = "home", showSettings = false, curUnit = 0;
 // ---------- 名前（初回だけ聞く。設定で変えられる） ----------
 function renderName(){
   view = "name";
-  app.innerHTML = `<section class="namecard">${tiger("happy", 120)}
+  app.innerHTML = `<section class="namecard">${tiger("happy", 150)}
     <h2>はじめまして！</h2>
     <p>お名前（呼び名）を教えてください。<br>レッスンのあとに声をかけます。</p>
     <input class="field" id="nameinput" maxlength="20" autocomplete="nickname" placeholder="例: たろう" aria-label="お名前">
@@ -571,7 +620,7 @@ function renderHome(){
   const hello = Engine.greeting({ hour: now().getHours(), streak: Engine.streak(state, day), xpToday: state.days[day] || 0, started: state.xp > 0 });
   const rail = "M" + XS.map((x, i) => `${x + DOT / 2} ${ROW * i + ROW / 2}`).join(" L");
   app.innerHTML = headHtml()
-    + `<section class="talk">${tiger("normal", 68)}<div class="bubble" id="hello">${who() ? `<span class="who">${who()}、</span>` : ""}<span>${esc(hello)}</span></div></section>`
+    + `<section class="talk">${tiger("normal", 84)}<div class="bubble" id="hello">${who() ? `<span class="who">${who()}、</span>` : ""}<span>${esc(hello)}</span></div></section>`
     + (showSettings ? settingsHtml() : "")
     + (seen >= 6 ? `<section class="card row" style="justify-content:space-between"><div><h3>復習</h3><div class="small muted">間違えた言葉・久しぶりの言葉から12問</div></div><button class="btn primary" id="practice">復習する</button></section>` : "")
     + `<div class="picker">
@@ -779,7 +828,7 @@ function renderResult(){
   const next = Engine.nextLesson(state), kr = Engine.reading(ch.ko, state.set.reading);
   app.innerHTML = headHtml() + `
     <h2 id="resulttitle">${title}</h2>
-    <section class="talk">${tiger(ch.mood, 92)}<div class="bubble" id="cheer">
+    <section class="talk">${tiger(ch.mood, 112)}<div class="bubble" id="cheer">
       <div>${who() ? `<span class="who">${who()}、</span>` : ""}<span id="cheertext">${esc(ch.text)}</span></div>
       <div class="kline">${sayBtn(ch.ko.ko)}<span><b class="ko" lang="ko">${esc(ch.ko.ko)}</b>${kr ? ` <span class="rd">${esc(kr)}</span>` : ""}<span class="small muted ja">${esc(ch.ko.ja)}</span></span></div>
     </div></section>
