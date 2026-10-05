@@ -179,9 +179,15 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);font-weight:700}
 .setrow{display:grid;gap:6px}
 .field{min-height:46px;border:2px solid var(--line);border-radius:14px;background:var(--surface);padding:0 14px;min-width:0;flex:1 1 180px}
-.namecard{display:grid;gap:14px;justify-items:center;text-align:center;padding-top:8vh}
+.namecard{display:grid;gap:14px;justify-items:center;text-align:center;padding-top:2vh}
 .namecard .field{width:100%;max-width:320px;flex:none;text-align:center;font-size:1.15rem}
 .namecard .btn.primary{width:100%;max-width:320px}
+.buddies{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%}
+.bud{display:grid;justify-items:center;gap:0;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:6px 2px 4px;font-size:.78rem;line-height:1.3;box-shadow:0 3px 0 var(--line-d);transition:transform .08s,box-shadow .08s;min-width:0}
+.bud:active{transform:translateY(3px);box-shadow:none}
+.bud[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 3px 0 var(--accent)}
+.bud .rd{font-size:.72rem}
+@media (max-width:520px){.buddies{grid-template-columns:repeat(4,1fr)}}
 .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9}
 .confetti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
@@ -420,7 +426,7 @@ const Engine = (() => {
     return n;
   }
   // name: null＝まだ聞いていない、""＝名前なしで使う。lastCheer は直前に出した労いの文（続けて同じ文を出さないため）
-  const newState = () => ({ v: 1, name: null, lastCheer: "", done: {}, items: {}, days: {}, xp: 0, set: { reading: "rom", goal: 20, audio: true, rate: 0.85 } });
+  const newState = () => ({ v: 1, name: null, lastCheer: "", done: {}, items: {}, days: {}, xp: 0, set: { reading: "rom", goal: 20, audio: true, rate: 0.85, buddy: "tiger" } });
 
   // ---------- 労いの一言・あいさつ ----------
   const KO = {
@@ -493,65 +499,142 @@ const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: red
 const themeOf = ui => ui < 4 ? 0 : ui < 8 ? 1 : ui < 14 ? 2 : 3;
 const DECO = ["아", "가", "까", "한", "안", "저", "이", "일", "는", "있", "해", "안", "었", "왜", "주", "시", "가", "길", "싶", "말"];
 
-// マスコット（虎の子）。自作のSVG。build.py が app.html に埋め込む。絵だけを見るには: python mascot_preview.py
-//   tiger(mood, size): mood = "normal"（手を振る）/ "happy"（ばんざい）/ "cheer"（こぶしを上げて励ます）
+// マスコット（干支の12匹）。自作のSVG。build.py が app.html に埋め込む。絵だけを見るには: python mascot_preview.py
+//   buddy(kind, mood, size): kind = BUDDIES のキー、mood = "normal"（手を振る）/ "happy"（ばんざい）/ "cheer"（片手を上げて励ます）
 //   size が小さい（70未満）ときは顔だけ、大きいときは全身を描く。
+//   どの動物も同じ骨組み（頭の楕円・目・体・手足）を使い、色・耳・模様・鼻口・尻尾だけを動物ごとに差し替える。
 //   グラデーションの定義 MASCOT_DEFS はページに1回だけ置く（app.html の先頭の隠し svg）。
-const MASCOT_DEFS = `
-  <radialGradient id="tg-fur" cx="42%" cy="32%" r="80%"><stop offset="0" stop-color="#ffc463"/><stop offset=".55" stop-color="#f9a23a"/><stop offset="1" stop-color="#e67e1c"/></radialGradient>
-  <radialGradient id="tg-cream" cx="45%" cy="30%" r="85%"><stop offset="0" stop-color="#fffdf6"/><stop offset="1" stop-color="#fbe6c4"/></radialGradient>
-  <radialGradient id="tg-eye" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#5a3a26"/><stop offset="1" stop-color="#1f120a"/></radialGradient>
-  <linearGradient id="tg-ear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd2c0"/><stop offset="1" stop-color="#f7a58e"/></linearGradient>`;
+const BUDDIES = (() => {
+  const mir = s => s + `<g transform="translate(200 0) scale(-1 1)">${s}</g>`;   // 左側だけ描いて左右対称にする
+  const cheeks = c => `<path d="M33 104q-14 10-8 22q14-2 20 6q22 16 55 16q33 0 55-16q6-8 20-6q6-12-8-22q-20 14-67 14q-47 0-67-14z" fill="${c.C}"/>`;
+  const muzzle = (c, rx = 33, ry = 24, fill) => `<ellipse cx="100" cy="118" rx="${rx}" ry="${ry}" fill="${fill || c.C}"/>`;
+  const nostrils = (c, y = 118, dx = 12, rx = 3.5, ry = 5) => `<ellipse cx="${100 - dx}" cy="${y}" rx="${rx}" ry="${ry}" fill="${c.INK}"/><ellipse cx="${100 + dx}" cy="${y}" rx="${rx}" ry="${ry}" fill="${c.INK}"/>`;
+  const curlTail = (stroke, w) => `<path d="M132 206q42 8 47-16q1-13-11-14" fill="none" stroke="${stroke}" stroke-width="${w}" stroke-linecap="round"/>`;
+  return {
+    mouse: { ja: "ねずみ", ko: "쥐", fur: ["#e4e7ef", "#bcc2d1", "#959cb0"], cream: ["#ffffff", "#f1ecee"], ear: ["#ffd3da", "#f7a6b4"], ink: "#565b6d", nose: "#f0788e", foot: "#aab0c2",
+      behind: c => mir(`<circle cx="36" cy="40" r="31" fill="${c.F}"/><circle cx="36" cy="42" r="19" fill="${c.E}"/>`),
+      over: c => muzzle(c, 28, 20) + mir(`<path d="M72 116l-26-6M72 123l-26 5" ${c.S} stroke-width="2.200" opacity=".7"/>`),
+      tail: c => `<path d="M136 208q46 2 46-30q0-15-15-12" fill="none" stroke="#f3a3b2" stroke-width="6" stroke-linecap="round"/>` },
+    cow: { ja: "うし", ko: "소", fur: ["#ffffff", "#f3ede4", "#c9bca9"], cream: ["#ffffff", "#f3ece2"], ear: ["#ffd2c8", "#f3a999"], ink: "#4b4039", foot: "#5c4c42", snout: 1, paw: "#5c4c42",
+      behind: c => mir(`<path d="M60 40q-18-16-8-36q10 16 24 22z" fill="#f4e3bd"/><g transform="rotate(-22 26 76)"><ellipse cx="26" cy="76" rx="22" ry="13" fill="${c.F}"/><ellipse cx="26" cy="77" rx="13" ry="7" fill="${c.E}"/></g>`),
+      over: c => `<g clip-path="url(#m-head)"><path d="M110 22q46 0 66 44q-26 12-46-2q-22-16-20-42z" fill="${c.INK}"/><path d="M22 96q16-6 24 10q-4 22-26 22z" fill="${c.INK}"/></g>`
+        + `<ellipse cx="100" cy="121" rx="37" ry="24" fill="#f9bdbb"/>` + nostrils(c, 115, 13),
+      marks: c => `<g clip-path="url(#m-body)"><path d="M54 150q26-4 30 18q-8 18-32 10z" fill="${c.INK}"/><path d="M132 196q16-8 20 6q-6 16-22 14z" fill="${c.INK}"/></g>`,
+      tail: c => `<path d="M138 204q38 2 40-24" fill="none" stroke="#d9cfc0" stroke-width="6" stroke-linecap="round"/><ellipse cx="178" cy="176" rx="8" ry="10" fill="${c.INK}"/>` },
+    tiger: { ja: "とら", ko: "호랑이", fur: ["#ffc463", "#f9a23a", "#e67e1c"], cream: ["#fffdf6", "#fbe6c4"], ear: ["#ffd2c0", "#f7a58e"], ink: "#4a2a14", nose: "#6b3a1e", foot: "#ee8c26",
+      behind: c => mir(`<circle cx="46" cy="38" r="22" fill="${c.F}"/><circle cx="46" cy="40" r="12" fill="${c.E}"/>`),
+      over: c => cheeks(c) + muzzle(c) + `<g fill="${c.INK}"><path d="M100 28q7 12 4 26q-4 5-8 0q-3-14 4-26z"/>` + mir(`<path d="M76 33q9 9 9 22q-3 5-8 2q-6-11-1-24z"/><path d="M29 78q13 0 22 8q-11 5-23 1z"/>`) + `</g>`,
+      marks: c => `<g fill="${c.INK}">` + mir(`<path d="M57 172q11 1 17 7q-9 3-17-1z"/><path d="M60 190q10 0 15 5q-8 3-14 0z"/>`) + `</g>`,
+      armMark: c => `<path d="M-11 -18q11 5 22 0" ${c.S} stroke-width="4"/>`,
+      tail: c => curlTail("#f39a30", 15) + `<path d="M132 206q42 8 47-16q1-13-11-14" fill="none" stroke="${c.INK}" stroke-width="15.500" stroke-dasharray="5 12" stroke-dashoffset="-22"/><circle cx="168" cy="176" r="7.700" fill="${c.INK}"/>` },
+    rabbit: { ja: "うさぎ", ko: "토끼", fur: ["#ffffff", "#f6e9ed", "#d6bcc6"], cream: ["#ffffff", "#fdf1f4"], ear: ["#ffd5de", "#f8a9ba"], ink: "#8a5560", nose: "#f0788e", foot: "#dcc3cc",
+      behind: c => mir(`<g transform="rotate(-9 72 40)"><ellipse cx="72" cy="6" rx="17" ry="42" fill="${c.F}"/><ellipse cx="72" cy="8" rx="8.500" ry="30" fill="${c.E}"/></g>`),
+      over: c => muzzle(c, 26, 19),
+      tail: c => `<circle cx="146" cy="202" r="14" fill="${c.F}"/>` },
+    dragon: { ja: "たつ", ko: "용", fur: ["#aaf0b6", "#58c783", "#2f9862"], cream: ["#fffbe0", "#f6e39a"], ear: ["#c9f7d0", "#7fd89c"], ink: "#1d6645", foot: "#3da66e", snout: 1,
+      behind: c => mir(`<path d="M68 38l-12-34l12 12l5-16l7 30z" fill="#f4c968"/><path d="M34 74l-28-14l10 32z" fill="#3da66e"/>`),
+      over: c => muzzle(c, 35, 25, "#cdf7d3") + nostrils(c, 112, 10) + mir(`<path d="M68 118q-30-10-44 12" fill="none" stroke="#f4c968" stroke-width="4" stroke-linecap="round"/>`)
+        + `<path d="M100 26l7 12h-14z M86 32l5 9h-11z M114 32l6 9h-11z" fill="#f4c968"/>`,
+      marks: c => `<path d="M79 176h42M75 188h50M79 200h42" stroke="#e0c264" stroke-width="2.500" stroke-linecap="round" fill="none"/>`,
+      tail: c => curlTail("#49b877", 15) + `<path d="M168 178q-6-16 6-26q2 10 10 12q-2 12-16 14z" fill="#f4c968"/>` },
+    snake: { ja: "へび", ko: "뱀", fur: ["#d2f59a", "#93d455", "#5ca935"], cream: ["#fffde6", "#f3eba2"], ear: ["#fff", "#fff"], ink: "#3b7420", foot: "#93d455", coil: 1, snout: 1,
+      behind: c => "",
+      over: c => `<g fill="${c.INK}" opacity=".55"><path d="M100 30l9 12l-9 12l-9-12z"/><path d="M76 40l6 9l-6 9l-6-9z"/><path d="M124 40l6 9l-6 9l-6-9z"/></g>` + nostrils(c, 110, 6, 2, 2.5),
+      tongue: c => `<path d="M100 127v9l-5 6M100 136l5 6" fill="none" stroke="#e0453a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` },
+    horse: { ja: "うま", ko: "말", fur: ["#e0aa72", "#bd7a40", "#9a5a2b"], cream: ["#fbe6d2", "#ecc8aa"], ear: ["#f7cdb5", "#e3a184"], ink: "#56301a", foot: "#4a2814", snout: 1, paw: "#4a2814",
+      behind: c => `<path d="M58 14q-46 26-42 96q2 24 20 32q-10-56 30-108z" fill="${c.INK}"/>` + mir(`<path d="M46 50q-8-38 14-50q16 20 10 46z" fill="${c.F}"/><path d="M52 44q-4-22 7-30q8 12 5 28z" fill="${c.E}"/>`),
+      over: c => `<g clip-path="url(#m-head)"><path d="M90 26q10-5 20 0q7 44 4 78h-28q-3-34 4-78z" fill="#fff" opacity=".92"/></g>`
+        + `<ellipse cx="100" cy="122" rx="39" ry="26" fill="${c.C}"/>` + nostrils(c, 116, 14)
+        + `<path d="M78 30q20-22 46-4q-2 22-18 34q-2-12-10-18q-10-2-18-12z" fill="${c.INK}"/>`,
+      tail: c => `<path d="M136 186q40-16 46 12q2 14-6 22q0-20-14-22q-14 0-26-6z" fill="${c.INK}"/>` },
+    sheep: { ja: "ひつじ", ko: "양", fur: ["#ffffff", "#f4eee3", "#cfc3ae"], cream: ["#ffe9d6", "#f4cbad"], ear: ["#f9d2ba", "#e8ab8c"], ink: "#6a473a", nose: "#c9806b", foot: "#6a473a", paw: "#6a473a",
+      behind: c => mir(`<g transform="rotate(24 26 94)"><ellipse cx="26" cy="94" rx="20" ry="11" fill="${c.C}"/><ellipse cx="26" cy="95" rx="11" ry="6" fill="${c.E}"/></g>`),
+      headBase: c => `<ellipse cx="100" cy="90" rx="72" ry="63" fill="${c.F}"/>` + [[58, 40, 23], [84, 27, 25], [114, 26, 25], [140, 38, 23], [38, 66, 19], [162, 66, 19], [32, 96, 16], [168, 96, 16]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c.F}"/>`).join("")
+        + `<ellipse cx="100" cy="102" rx="55" ry="47" fill="${c.C}"/>`,
+      over: c => "",
+      bodyBase: c => `<ellipse cx="100" cy="178" rx="44" ry="40" fill="${c.F}"/>` + [[58, 164, 17], [56, 188, 16], [142, 164, 17], [144, 188, 16], [76, 146, 15], [124, 146, 15]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c.F}"/>`).join(""),
+      armFill: c => c.C,
+      tail: c => `<circle cx="148" cy="202" r="13" fill="${c.F}"/>` },
+    monkey: { ja: "さる", ko: "원숭이", fur: ["#cf9560", "#a66b3c", "#834e29"], cream: ["#ffecd6", "#f6cfa9"], ear: ["#ffe0c6", "#f0b98f"], ink: "#56301a", nose: "#8a5632", foot: "#8d5630",
+      behind: c => mir(`<circle cx="26" cy="94" r="21" fill="${c.F}"/><circle cx="26" cy="94" r="12" fill="${c.E}"/>`),
+      over: c => `<circle cx="74" cy="88" r="31" fill="${c.C}"/><circle cx="126" cy="88" r="31" fill="${c.C}"/><ellipse cx="100" cy="118" rx="42" ry="30" fill="${c.C}"/>`,
+      tail: c => `<path d="M136 206q52 6 48-34q-2-18-18-14q-11 4-6 15" fill="none" stroke="#a66b3c" stroke-width="9" stroke-linecap="round"/>` },
+    rooster: { ja: "とり", ko: "닭", fur: ["#ffffff", "#f5eee1", "#cdbfa8"], cream: ["#fffaea", "#f6e6bb"], ear: ["#fff", "#fff"], ink: "#7a4a2a", foot: "#f29d38", beak: 1, snout: 1,
+      behind: c => `<circle cx="82" cy="26" r="14" fill="#e5483b"/><circle cx="100" cy="18" r="16" fill="#e5483b"/><circle cx="118" cy="26" r="14" fill="#e5483b"/>`,
+      over: c => "",
+      armMark: c => `<path d="M-7 -30q7 6 14 0M-9 -22q9 6 18 0" ${c.S} stroke-width="2.500" opacity=".45"/>`,
+      tail: c => `<g transform="rotate(38 140 200)"><ellipse cx="140" cy="168" rx="11" ry="34" fill="#2f6b5a"/></g><g transform="rotate(60 140 200)"><ellipse cx="140" cy="170" rx="11" ry="32" fill="#e5483b"/></g><g transform="rotate(82 140 200)"><ellipse cx="140" cy="172" rx="10" ry="28" fill="#f4c968"/></g>` },
+    dog: { ja: "いぬ", ko: "개", fur: ["#ffe6b3", "#f4be6b", "#dd9a42"], cream: ["#ffffff", "#fbeedb"], ear: ["#ffd2bd", "#f2a487"], ink: "#5e3818", nose: "#2b1a10", foot: "#e3a34c",
+      behind: c => mir(`<path d="M38 56q-6-42 22-52q20 24 12 50z" fill="${c.F}"/><path d="M46 50q-3-26 12-34q11 14 6 30z" fill="${c.E}"/>`),
+      over: c => cheeks(c) + muzzle(c) + mir(`<ellipse cx="74" cy="71" rx="8" ry="5.500" fill="${c.C}"/>`),
+      tail: c => `<path d="M134 198q44 2 42-32q-2-18-20-12" fill="none" stroke="#f1b760" stroke-width="16" stroke-linecap="round"/><circle cx="157" cy="155" r="8" fill="${c.C}"/>` },
+    pig: { ja: "いのしし（ぶた）", ko: "돼지", fur: ["#ffdde2", "#f9b1bd", "#ea8a9c"], cream: ["#fff1f3", "#fdd6dc"], ear: ["#ffc4cf", "#ef8fa3"], ink: "#a2435a", foot: "#e88a9c", snout: 1,
+      behind: c => mir(`<path d="M38 54q-12-36 16-46q22 16 16 42z" fill="#f29aab"/><path d="M46 48q-6-20 9-28q12 10 8 24z" fill="${c.E}"/>`),
+      over: c => `<ellipse cx="100" cy="117" rx="27" ry="19" fill="#f48fa4"/>` + nostrils(c, 117, 9),
+      tail: c => `<path d="M138 198q24-4 22-18q-4-11-13-4q-6 9 7 13q15 2 19-11" fill="none" stroke="#f29aab" stroke-width="6" stroke-linecap="round"/>` },
+  };
+})();
+const BUDDY_ORDER = ["mouse", "cow", "tiger", "rabbit", "dragon", "snake", "horse", "sheep", "monkey", "rooster", "dog", "pig"];
 
-function tiger(mood, size){
-  const INK = "#4a2a14", S = `fill="none" stroke="${INK}" stroke-linecap="round" stroke-linejoin="round"`;
-  const full = size >= 70;
+const MASCOT_DEFS = `<radialGradient id="m-eye" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#5a3a26"/><stop offset="1" stop-color="#1f120a"/></radialGradient>
+  <clipPath id="m-head"><ellipse cx="100" cy="90" rx="72" ry="63"/></clipPath><clipPath id="m-body"><ellipse cx="100" cy="178" rx="44" ry="40"/></clipPath>`
+  + BUDDY_ORDER.map(k => { const b = BUDDIES[k]; return `
+  <radialGradient id="m-${k}-fur" cx="42%" cy="32%" r="80%"><stop offset="0" stop-color="${b.fur[0]}"/><stop offset=".55" stop-color="${b.fur[1]}"/><stop offset="1" stop-color="${b.fur[2]}"/></radialGradient>
+  <radialGradient id="m-${k}-cream" cx="45%" cy="30%" r="85%"><stop offset="0" stop-color="${b.cream[0]}"/><stop offset="1" stop-color="${b.cream[1]}"/></radialGradient>
+  <linearGradient id="m-${k}-ear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${b.ear[0]}"/><stop offset="1" stop-color="${b.ear[1]}"/></linearGradient>`; }).join("");
+
+function buddy(kind, mood, size){
+  const k = BUDDIES[kind] ? kind : "tiger", b = BUDDIES[k], INK = b.ink;
+  const c = { F: `url(#m-${k}-fur)`, C: `url(#m-${k}-cream)`, E: `url(#m-${k}-ear)`, INK, mood, S: `fill="none" stroke="${INK}" stroke-linecap="round" stroke-linejoin="round"` };
+  const S = c.S, full = size >= 70;
   // 目
-  const eye = x => `<ellipse cx="${x}" cy="93" rx="9.500" ry="12" fill="url(#tg-eye)"/><circle cx="${x + 3.500}" cy="88" r="4" fill="#fff"/><circle cx="${x - 3.500}" cy="98" r="1.800" fill="#fff" opacity=".9"/>`;
+  const eye = x => `<ellipse cx="${x}" cy="93" rx="9.500" ry="12" fill="url(#m-eye)"/><circle cx="${x + 3.500}" cy="88" r="4" fill="#fff"/><circle cx="${x - 3.500}" cy="98" r="1.800" fill="#fff" opacity=".9"/>`;
   const eyes = mood === "happy" ? `<path d="M62 96q12-15 24 0M114 96q12-15 24 0" ${S} stroke-width="5.500"/>`
     : eye(74) + eye(126) + (mood === "cheer" ? `<path d="M62 77q10-7 21-3M138 77q-10-7-21-3" ${S} stroke-width="4.500"/>` : "");
-  // 口
-  const mouth = mood === "happy"
-    ? `<path d="M84 117q16 4 32 0q-2 19-16 19q-14 0-16-19z" fill="#7d2b1c"/><path d="M90 130q10-7 20 0q-4 6-10 6q-6 0-10-6z" fill="#ff9a8a"/>`
-    : mood === "cheer" ? `<path d="M100 113v4" ${S} stroke-width="3.500"/><ellipse cx="100" cy="124" rx="7" ry="6.500" fill="#7d2b1c"/><ellipse cx="100" cy="127" rx="4" ry="2.500" fill="#ff9a8a"/>`
-    : `<path d="M100 113v5M100 118q-7 9-15 3M100 118q7 9 15 3" ${S} stroke-width="3.500"/>`;
-  // 頭（耳 → 頭 → 白い頬とマズル → しま → 顔）
-  const head = `
-    <circle cx="46" cy="38" r="22" fill="url(#tg-fur)"/><circle cx="154" cy="38" r="22" fill="url(#tg-fur)"/>
-    <circle cx="46" cy="40" r="12" fill="url(#tg-ear)"/><circle cx="154" cy="40" r="12" fill="url(#tg-ear)"/>
-    <ellipse cx="100" cy="90" rx="72" ry="63" fill="url(#tg-fur)"/>
-    <path d="M33 104q-14 10-8 22q14-2 20 6q22 16 55 16q33 0 55-16q6-8 20-6q6-12-8-22q-20 14-67 14q-47 0-67-14z" fill="url(#tg-cream)"/>
-    <ellipse cx="100" cy="118" rx="33" ry="24" fill="url(#tg-cream)"/>
-    <g fill="${INK}">
-      <path d="M100 28q7 12 4 26q-4 5-8 0q-3-14 4-26z"/><path d="M76 33q9 9 9 22q-3 5-8 2q-6-11-1-24z"/><path d="M124 33q-9 9-9 22q3 5 8 2q6-11 1-24z"/>
-      <path d="M29 78q13 0 22 8q-11 5-23 1z"/><path d="M171 78q-13 0-22 8q11 5 23 1z"/>
-    </g>
-    <ellipse cx="55" cy="114" rx="11" ry="7" fill="#ff8a73" opacity=".5"/><ellipse cx="145" cy="114" rx="11" ry="7" fill="#ff8a73" opacity=".5"/>
-    ${eyes}
-    <path d="M91 104q9-5 18 0q-1 8-9 10q-8-2-9-10z" fill="#6b3a1e"/><ellipse cx="97" cy="105" rx="3" ry="1.500" fill="#fff" opacity=".45"/>
-    ${mouth}`;
-  if(!full) return `<svg class="tiger" width="${size}" height="${size}" viewBox="14 6 172 172" aria-hidden="true">${head}</svg>`;
-  // 腕: [付け根x, 付け根y, 角度]。手先に肉球
-  const arm = (x, y, deg) => `<g transform="translate(${x} ${y}) rotate(${deg})"><ellipse cx="0" cy="-17" rx="12" ry="22" fill="url(#tg-fur)"/><path d="M-11 -18q11 5 22 0" ${S} stroke-width="4"/><ellipse cx="0" cy="-31" rx="7" ry="5.500" fill="url(#tg-cream)"/></g>`;
-  // 角度は「真上が0、時計回りが正」。下ろした腕は200°前後
-  const arms = mood === "happy" ? arm(62, 164, -52) + arm(138, 164, 52)
-    : mood === "cheer" ? arm(64, 160, 208) + arm(140, 166, 24)
-    : arm(64, 160, 205) + arm(139, 165, 48);
-  return `<svg class="tiger" width="${size}" height="${size * 1.150}" viewBox="0 0 200 230" aria-hidden="true">
-    <ellipse cx="100" cy="221" rx="54" ry="7" fill="#000" opacity=".12"/>
-    <path d="M132 206q42 8 47-16q1-13-11-14" fill="none" stroke="#f39a30" stroke-width="15" stroke-linecap="round"/>
-    <path d="M132 206q42 8 47-16q1-13-11-14" fill="none" stroke="${INK}" stroke-width="15.500" stroke-dasharray="5 12" stroke-dashoffset="-22"/>
-    <circle cx="168" cy="176" r="7.700" fill="${INK}"/>
-    <ellipse cx="78" cy="212" rx="21" ry="11" fill="#ee8c26"/><ellipse cx="122" cy="212" rx="21" ry="11" fill="#ee8c26"/>
-    <ellipse cx="74" cy="214" rx="10" ry="5" fill="url(#tg-cream)"/><ellipse cx="126" cy="214" rx="10" ry="5" fill="url(#tg-cream)"/>
-    <ellipse cx="100" cy="178" rx="44" ry="40" fill="url(#tg-fur)"/>
-    <ellipse cx="100" cy="186" rx="27" ry="28" fill="url(#tg-cream)"/>
-    <g fill="${INK}"><path d="M57 172q11 1 17 7q-9 3-17-1z"/><path d="M143 172q-11 1-17 7q9 3 17-1z"/><path d="M60 190q10 0 15 5q-8 3-14 0z"/><path d="M140 190q-10 0-15 5q8 3 14 0z"/></g>
-    ${arms}${head}</svg>`;
+  // 鼻と口。鼻面のある動物（うし・うま・ぶた など）は三角の鼻を描かず、口を小さくして鼻面の下へ下げる
+  let face;
+  if(b.beak){
+    face = `<ellipse cx="100" cy="${mood === "happy" ? 134 : 128}" rx="7" ry="9" fill="#e5483b"/>` + (mood === "happy"
+      ? `<path d="M86 106q14-7 28 0l-14 10z" fill="#f6b93b"/><path d="M90 116h20l-10 14z" fill="#e8962a"/>`
+      : `<path d="M86 106q14-7 28 0q-4 13-14 18q-10-5-14-18z" fill="#f6b93b"/><path d="M89 113q11 4 22 0" ${S} stroke-width="2" opacity=".5"/>`);
+  } else {
+    const tf = !b.snout ? "" : b.coil ? `translate(0 2)` : `translate(20 36) scale(.8)`;
+    const mouth = mood === "happy"
+      ? `<path d="M84 117q16 4 32 0q-2 19-16 19q-14 0-16-19z" fill="#7d2b1c"/><path d="M90 130q10-7 20 0q-4 6-10 6q-6 0-10-6z" fill="#ff9a8a"/>`
+      : mood === "cheer" ? (b.snout ? "" : `<path d="M100 113v4" ${S} stroke-width="3.500"/>`) + `<ellipse cx="100" cy="124" rx="7" ry="6.500" fill="#7d2b1c"/><ellipse cx="100" cy="127" rx="4" ry="2.500" fill="#ff9a8a"/>`
+      : (b.snout ? "" : `<path d="M100 113v5" ${S} stroke-width="3.500"/>`) + `<path d="M100 118q-7 9-15 3M100 118q7 9 15 3" ${S} stroke-width="3.500"/>`;
+    const nose = b.snout ? "" : `<path d="M91 104q9-5 18 0q-1 8-9 10q-8-2-9-10z" fill="${b.nose}"/><ellipse cx="97" cy="105" rx="3" ry="1.500" fill="#fff" opacity=".45"/>`;
+    face = nose + `<g transform="${tf}">${mouth}</g>` + (b.tongue && mood === "normal" ? b.tongue(c) : "");
+  }
+  const head = b.behind(c) + (b.headBase ? b.headBase(c) : `<ellipse cx="100" cy="90" rx="72" ry="63" fill="${c.F}"/>`) + b.over(c)
+    + `<ellipse cx="55" cy="114" rx="11" ry="7" fill="#ff8a73" opacity=".5"/><ellipse cx="145" cy="114" rx="11" ry="7" fill="#ff8a73" opacity=".5"/>` + eyes + face;
+  if(!full) return `<svg class="tiger" width="${size}" height="${size}" viewBox="-2 -36 204 204" aria-hidden="true">${head}</svg>`;
+  const shadow = `<ellipse cx="100" cy="221" rx="${b.coil ? 66 : 54}" ry="7" fill="#000" opacity=".12"/>`;
+  let body;
+  if(b.coil){   // へび: 手足の代わりにとぐろ。しっぽの先の上げ方でポーズを変える
+    const tip = mood === "happy" ? "M150 204q40-4 34-46" : mood === "cheer" ? "M150 204q36 0 34-34" : "M150 206q30 2 32-18";
+    const ring = (y, rx) => `<ellipse cx="100" cy="${y}" rx="${rx}" ry="17" fill="${c.F}"/><path d="M${100 - rx + 10} ${y + 8}q${rx - 10} 12 ${2 * rx - 20} 0" ${S} stroke-width="3" opacity=".22"/>`;
+    body = `<path d="${tip}" fill="none" stroke="${b.fur[1]}" stroke-width="14" stroke-linecap="round"/>` + ring(206, 62) + ring(188, 49) + ring(170, 37)
+      + `<ellipse cx="100" cy="164" rx="20" ry="9" fill="${c.C}"/>`;
+  } else {
+    // 腕: [付け根x, 付け根y, 角度]。角度は「真上が0、時計回りが正」。下ろした腕は200°前後
+    const aF = b.armFill ? b.armFill(c) : c.F, paw = b.paw || c.C;
+    const arm = (x, y, deg) => `<g transform="translate(${x} ${y}) rotate(${deg})"><ellipse cx="0" cy="-17" rx="12" ry="22" fill="${aF}"/>${b.armMark ? b.armMark(c) : ""}${b.beak ? "" : `<ellipse cx="0" cy="-31" rx="7" ry="5.500" fill="${paw}"/>`}</g>`;
+    const arms = mood === "happy" ? arm(62, 164, -52) + arm(138, 164, 52) : mood === "cheer" ? arm(64, 160, 208) + arm(140, 166, 24) : arm(64, 160, 205) + arm(139, 165, 48);
+    body = (b.tail ? b.tail(c) : "")
+      + `<ellipse cx="78" cy="212" rx="21" ry="11" fill="${b.foot}"/><ellipse cx="122" cy="212" rx="21" ry="11" fill="${b.foot}"/>`
+      + (b.paw || b.beak ? "" : `<ellipse cx="74" cy="214" rx="10" ry="5" fill="${c.C}"/><ellipse cx="126" cy="214" rx="10" ry="5" fill="${c.C}"/>`)
+      + (b.bodyBase ? b.bodyBase(c) : `<ellipse cx="100" cy="178" rx="44" ry="40" fill="${c.F}"/><ellipse cx="100" cy="186" rx="27" ry="28" fill="${c.C}"/>`)
+      + (b.marks ? b.marks(c) : "") + arms;
+  }
+  return `<svg class="tiger" width="${size}" height="${Math.round(size * 1.300)}" viewBox="0 -36 200 266" aria-hidden="true">${shadow}${body}${head}</svg>`;
 }
-if (typeof module !== "undefined") module.exports = { tiger, MASCOT_DEFS };
+if (typeof module !== "undefined") module.exports = { buddy, BUDDIES, BUDDY_ORDER, MASCOT_DEFS };
 
 document.getElementById("mdefs").innerHTML = MASCOT_DEFS;
+const pal = (mood, size) => buddy(state.set.buddy, mood, size);     // 選んだキャラクター
+// キャラクター選び（干支の12匹）。最初の画面と設定で使う
+const buddyPicker = () => `<div class="buddies" role="group" aria-label="キャラクター">${BUDDY_ORDER.map(k => `<button class="bud" data-buddy="${k}" aria-pressed="${state.set.buddy === k}" title="${BUDDIES[k].ja}">${buddy(k, "normal", 54)}<span>${BUDDIES[k].ja.replace(/（.*/, "")}</span><span class="ko rd" lang="ko">${BUDDIES[k].ko}</span></button>`).join("")}</div>`;
 const ring = (pct, size) => `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="15" fill="none" stroke-width="5"/><circle class="fg" cx="18" cy="18" r="15" fill="none" stroke-width="5" stroke-linecap="round" pathLength="100" stroke-dasharray="${Math.max(0, Math.min(100, pct))} 100"/></svg>`;
 
 // ---------- 音声（端末の読み上げ機能。韓国語の声が無い端末では聞き取り問題を出さない） ----------
@@ -565,15 +648,17 @@ function speak(text){
 }
 const sayBtn = (ko, big) => canSpeak() ? `<button class="say ${big ? "big" : ""}" data-say="${esc(ko)}" aria-label="音声を聞く">${icon("say")}${big ? "<span>聞く</span>" : ""}</button>` : "";
 
-let view = "home", showSettings = false, curUnit = 0;
+let view = "home", showSettings = false, curUnit = 0, draftName = "";
 
 // ---------- 名前（初回だけ聞く。設定で変えられる） ----------
 function renderName(){
   view = "name";
-  app.innerHTML = `<section class="namecard">${tiger("happy", 150)}
+  app.innerHTML = `<section class="namecard">${pal("happy", 150)}
     <h2>はじめまして！</h2>
     <p>お名前（呼び名）を教えてください。<br>レッスンのあとに声をかけます。</p>
-    <input class="field" id="nameinput" maxlength="20" autocomplete="nickname" placeholder="例: たろう" aria-label="お名前">
+    <input class="field" id="nameinput" maxlength="20" autocomplete="nickname" placeholder="例: たろう" aria-label="お名前" value="${esc(draftName)}">
+    <div class="label">いっしょに学ぶキャラクター（あとで設定から変えられます）</div>
+    ${buddyPicker()}
     <button class="btn primary" id="namesave">はじめる</button>
     <button class="btn link" id="nameskip">名前なしで始める</button>
   </section>`;
@@ -604,6 +689,7 @@ function settingsHtml(){
   return `<section class="card stack" id="settings">
     <h2>設定</h2>
     <div class="setrow"><div class="label">お名前</div><div class="row"><input class="field" id="setname" maxlength="20" value="${esc(state.name || "")}" placeholder="名前なし" aria-label="お名前"><button class="btn" id="setnamesave">変更</button></div></div>
+    <div class="setrow"><div class="label">キャラクター</div>${buddyPicker()}</div>
     <div class="setrow"><div class="label">読みがな</div>${seg("reading", [["rom", "ローマ字"], ["kana", "カタカナ"], ["off", "なし"]])}</div>
     <div class="setrow"><div class="label">音声</div><div class="row">${seg("audio", [[true, "あり"], [false, "なし"]])}${seg("rate", [[0.65, "ゆっくり"], [0.85, "ふつう"], [1, "速め"]])}</div><div class="small muted">${voice}</div></div>
     <div class="setrow"><div class="label">1日の目標</div>${seg("goal", [[10, "10 XP"], [20, "20 XP"], [40, "40 XP"], [60, "60 XP"]])}<div class="small muted">1レッスンでおよそ15〜20 XP。合計 <span class="num">${state.xp}</span> XP</div></div>
@@ -620,7 +706,7 @@ function renderHome(){
   const hello = Engine.greeting({ hour: now().getHours(), streak: Engine.streak(state, day), xpToday: state.days[day] || 0, started: state.xp > 0 });
   const rail = "M" + XS.map((x, i) => `${x + DOT / 2} ${ROW * i + ROW / 2}`).join(" L");
   app.innerHTML = headHtml()
-    + `<section class="talk">${tiger("normal", 84)}<div class="bubble" id="hello">${who() ? `<span class="who">${who()}、</span>` : ""}<span>${esc(hello)}</span></div></section>`
+    + `<section class="talk">${pal("normal", 84)}<div class="bubble" id="hello">${who() ? `<span class="who">${who()}、</span>` : ""}<span>${esc(hello)}</span></div></section>`
     + (showSettings ? settingsHtml() : "")
     + (seen >= 6 ? `<section class="card row" style="justify-content:space-between"><div><h3>復習</h3><div class="small muted">間違えた言葉・久しぶりの言葉から12問</div></div><button class="btn primary" id="practice">復習する</button></section>` : "")
     + `<div class="picker">
@@ -735,7 +821,7 @@ function feedbackHtml(ex){
     ans = `<div class="answer"><div class="row">${koHtml(it)}${sayBtn(it.ko)}</div>${rdHtml(it)}${it.ja ? `<div>${esc(it.ja)}</div>` : ""}${it.note ? `<div class="small muted">${esc(it.note)}</div>` : ""}</div>`;
   }
   return `<div class="sheetpad"></div><section class="sheet ${a.ok ? "ok" : "ng"}" id="feedback"><div class="in">
-    <div class="top">${tiger(a.ok ? "happy" : "cheer", 52)}<div><div class="verdict">${a.ok ? "正解！" : ex.type === "match" ? "間違えたペアがありました" : "不正解"}</div>${ans}</div></div>
+    <div class="top">${pal(a.ok ? "happy" : "cheer", 52)}<div><div class="verdict">${a.ok ? "正解！" : ex.type === "match" ? "間違えたペアがありました" : "不正解"}</div>${ans}</div></div>
     <button class="btn primary wide" id="next">${last ? "結果を見る" : "次へ"}</button></div></section>`;
 }
 
@@ -828,7 +914,7 @@ function renderResult(){
   const next = Engine.nextLesson(state), kr = Engine.reading(ch.ko, state.set.reading);
   app.innerHTML = headHtml() + `
     <h2 id="resulttitle">${title}</h2>
-    <section class="talk">${tiger(ch.mood, 112)}<div class="bubble" id="cheer">
+    <section class="talk">${pal(ch.mood, 112)}<div class="bubble" id="cheer">
       <div>${who() ? `<span class="who">${who()}、</span>` : ""}<span id="cheertext">${esc(ch.text)}</span></div>
       <div class="kline">${sayBtn(ch.ko.ko)}<span><b class="ko" lang="ko">${esc(ch.ko.ko)}</b>${kr ? ` <span class="rd">${esc(kr)}</span>` : ""}<span class="small muted ja">${esc(ch.ko.ja)}</span></span></div>
     </div></section>
@@ -853,6 +939,7 @@ function saveName(id){ state.name = cleanName(document.getElementById(id).value)
 app.addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
   if(b.dataset.say !== undefined) return speak(b.dataset.say);
+  if(b.dataset.buddy){ state.set.buddy = b.dataset.buddy; save(); return view === "name" ? renderName() : renderHome(); }
   if(b.id === "namesave"){ saveName("nameinput"); return goHome(); }
   if(b.id === "nameskip"){ state.name = ""; save(); return goHome(); }
   if(b.id === "setnamesave"){ saveName("setname"); return renderHome(); }
@@ -889,6 +976,7 @@ app.addEventListener("click", e => {
   }
   if(b.id === "checkorder"){ const ok = Engine.gradeOrder(ex, a.line.map(k => ex.tiles[k])); return finish(ok, [[ex.id, ok]]); }
 });
+app.addEventListener("input", e => { if(e.target.id === "nameinput") draftName = e.target.value; });
 app.addEventListener("change", e => { if(e.target.id === "unitsel"){ curUnit = +e.target.value; renderHome(); } });
 document.addEventListener("keydown", e => {
   if(e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
