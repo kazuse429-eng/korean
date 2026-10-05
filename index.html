@@ -16,84 +16,114 @@
 </head>
 <body>
 <style>
-/* レイアウト: 単一カラム。ホーム＝ユニットごとのレッスンの道筋、レッスン＝1問ずつ、結果＝XPと間違えた言葉 */
+/* レイアウト: 単一カラム。ホーム＝ユニットをプルダウンで選び、その5レッスンの道筋だけを出す。レッスン＝1問ずつ、正誤は画面下のパネル。結果＝マスコットの労いとXP */
 :root{
-  --bg:#f6f4ef; --surface:#ffffff; --fg:#1f2a30; --muted:#66727a; --line:#dcd8cf;
-  --accent:#0f7b6c; --accent-soft:#dff1ec; --accent-fg:#ffffff;
-  --ok:#1c7a4c; --ok-soft:#e2f3ea; --ng:#b2352e; --ng-soft:#fae6e4; --gold:#b86e0c; --gold-soft:#fbeed8;
+  --bg:#f6f4ef; --surface:#ffffff; --fg:#1f2a30; --muted:#66727a; --line:#dcd8cf; --line-d:#c4bfb3;
+  --accent:#0f7b6c; --accent-d:#0a5a4f; --accent-soft:#dff1ec; --accent-fg:#ffffff;
+  --ok:#1c7a4c; --ok-soft:#e2f3ea; --ng:#b2352e; --ng-soft:#fae6e4; --gold:#b86e0c; --gold-soft:#fbeed8; --star:#e2a100;
   --font-body:"BIZ UDPGothic","Yu Gothic UI","Hiragino Sans","Meiryo",system-ui,sans-serif;
   --font-ko:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","BIZ UDPGothic",system-ui,sans-serif;
   --font-num:"BIZ UDGothic","Consolas","Menlo",monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#12181a; --surface:#1a2326; --fg:#e6ecee; --muted:#96a4aa; --line:#2e3b40;
-  --accent:#4fc3ae; --accent-soft:#17362f; --accent-fg:#08201b;
-  --ok:#5cc58f; --ok-soft:#173226; --ng:#ee7f76; --ng-soft:#3a1d1b; --gold:#e9a94a; --gold-soft:#3a2b12; color-scheme:dark}}
+  --bg:#12181a; --surface:#1a2326; --fg:#e6ecee; --muted:#96a4aa; --line:#2e3b40; --line-d:#232d31;
+  --accent:#4fc3ae; --accent-d:#2f8f7e; --accent-soft:#17362f; --accent-fg:#08201b;
+  --ok:#5cc58f; --ok-soft:#173226; --ng:#ee7f76; --ng-soft:#3a1d1b; --gold:#e9a94a; --gold-soft:#3a2b12; --star:#f0bd3a; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#12181a; --surface:#1a2326; --fg:#e6ecee; --muted:#96a4aa; --line:#2e3b40;
-  --accent:#4fc3ae; --accent-soft:#17362f; --accent-fg:#08201b;
-  --ok:#5cc58f; --ok-soft:#173226; --ng:#ee7f76; --ng-soft:#3a1d1b; --gold:#e9a94a; --gold-soft:#3a2b12; color-scheme:dark}
+  --bg:#12181a; --surface:#1a2326; --fg:#e6ecee; --muted:#96a4aa; --line:#2e3b40; --line-d:#232d31;
+  --accent:#4fc3ae; --accent-d:#2f8f7e; --accent-soft:#17362f; --accent-fg:#08201b;
+  --ok:#5cc58f; --ok-soft:#173226; --ng:#ee7f76; --ng-soft:#3a1d1b; --gold:#e9a94a; --gold-soft:#3a2b12; --star:#f0bd3a; color-scheme:dark}
+/* ユニットのテーマ色: --u 色面、--ud 影、--ut 地の上に置く文字と線（ダークでは明るくする） */
+.th0{--u:#0f7b6c;--ud:#0a5a4f;--ut:#0f7b6c} .th1{--u:#c2610c;--ud:#8f4505;--ut:#b3580a} .th2{--u:#2563a8;--ud:#1a4779;--ut:#2563a8} .th3{--u:#6b4aa8;--ud:#4c3380;--ut:#6b4aa8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .th0{--ut:#4fc3ae} :root:not([data-theme="light"]) .th1{--ut:#f0a35c} :root:not([data-theme="light"]) .th2{--ut:#7fb3ec} :root:not([data-theme="light"]) .th3{--ut:#b39ae6}}
+:root[data-theme="dark"] .th0{--ut:#4fc3ae} :root[data-theme="dark"] .th1{--ut:#f0a35c} :root[data-theme="dark"] .th2{--ut:#7fb3ec} :root[data-theme="dark"] .th3{--ut:#b39ae6}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.7;margin:0}
-.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:16px 72px}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:14px 56px}
 h1,h2,h3{text-wrap:balance;line-height:1.35;margin:0}
-h1{font-size:1.25rem} h2{font-size:1.15rem} h3{font-size:1rem}
+h1{font-size:1.2rem} h2{font-size:1.2rem} h3{font-size:1rem}
 p{margin:0}
 .muted{color:var(--muted)} .small{font-size:.85rem}
 .num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
 .label{font-size:.75rem;letter-spacing:.08em;color:var(--muted)}
 .ko{font-family:var(--font-ko)}
-button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
-button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 18px;min-height:44px}
-.btn:hover:not(:disabled){border-color:var(--accent)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* 押しボタン: 下に影を付けて立体に見せ、押すと沈む */
+.btn{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:9px 18px;min-height:46px;font-weight:700;box-shadow:0 3px 0 var(--line-d);transition:transform .08s,box-shadow .08s}
+.btn:active:not(:disabled),.opt:active:not(:disabled),.tile:active:not(:disabled){transform:translateY(3px);box-shadow:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:0 4px 0 var(--accent-d)}
 .btn.wide{width:100%}
 .btn:disabled{opacity:.45;cursor:default}
+.btn.link{border:0;background:none;box-shadow:none;font-weight:400;color:var(--muted);text-decoration:underline}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.stack{display:grid;gap:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stack{display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
 .icon{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tiger{flex:none;display:block}
 
 /* ヘッダー */
-.head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:12px;border-bottom:2px solid var(--fg)}
-.stats{display:flex;gap:14px;align-items:center}
-.stat{display:flex;gap:4px;align-items:center;font-weight:700}
-.stat.streak{color:var(--gold)} .stat.streak.off{color:var(--muted)}
-.goal{display:grid;gap:2px;min-width:92px}
-.goal .small{line-height:1.2}
-.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
-.bar.gold i{background:var(--gold)}
-.iconbtn{border:0;background:none;padding:10px;border-radius:10px;display:grid;place-items:center}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.head h1{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{display:flex;gap:6px;align-items:center;flex:none}
+.pill{display:flex;gap:4px;align-items:center;font-weight:700;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 8px;min-height:40px}
+.pill.streak{color:var(--gold)} .pill.streak.off{color:var(--muted)}
+.ring{flex:none;transform:rotate(-90deg)}
+.ring .bg{stroke:var(--line)} .ring .fg{stroke:var(--gold);transition:stroke-dasharray .6s}
+.iconbtn{border:0;background:none;padding:10px;border-radius:12px;display:grid;place-items:center}
 .iconbtn:hover{background:var(--accent-soft)}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .3s}
 
-/* 道筋 */
-.unit{display:grid;gap:10px}
-.unithead{display:grid;gap:2px;background:var(--accent);color:var(--accent-fg);border-radius:14px;padding:14px 16px}
-.unithead .label{color:inherit;opacity:.85}
-.unithead.locked{background:var(--surface);color:var(--muted);border:1px solid var(--line)}
-.unithead .btn{justify-self:start;margin-top:8px;color:var(--fg)}
-.path{display:grid;gap:10px;padding-block:4px}
-.node{display:grid;grid-template-columns:60px 1fr;gap:14px;align-items:center;text-align:left;border:0;background:none;padding:0;margin-left:calc(var(--x)*30px)}
-.node .dot{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-num);font-size:1.2rem;font-weight:700;
-  background:var(--surface);border:3px solid var(--line);color:var(--muted)}
-.node.open .dot{border-color:var(--accent);color:var(--accent)}
-.node.done .dot{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.node.next .dot{box-shadow:0 0 0 5px var(--accent-soft)}
+/* マスコットと吹き出し */
+.talk{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.bubble{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px;display:grid;gap:2px}
+.bubble::before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:var(--surface);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.bubble .who{font-weight:700}
+.bubble .kline{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-top:4px;padding-top:8px;border-top:1px dashed var(--line)}
+.bubble .kline:not(:has(.say)){grid-template-columns:1fr}
+.bubble .kline .ja{display:block}
+
+/* ユニットのプルダウン */
+.picker{display:grid;grid-template-columns:46px 1fr 46px;gap:8px;align-items:stretch}
+.picker .btn{padding:0;font-size:1.2rem}
+.picker select{width:100%;min-height:46px;border:2px solid var(--line);border-radius:14px;background:var(--surface);padding:0 12px;font-weight:700;box-shadow:0 3px 0 var(--line-d)}
+/* ユニットの見出し */
+.hero{position:relative;overflow:hidden;background:var(--u);color:#fff;border-radius:20px;padding:16px 18px;display:grid;gap:4px;box-shadow:0 5px 0 var(--ud)}
+.hero .label{color:#fff;opacity:.9}
+.hero .deco{position:absolute;right:6px;top:-18px;font-family:var(--font-ko);font-size:7.5rem;font-weight:700;line-height:1;opacity:.18;pointer-events:none}
+.hero .bar{background:rgba(255,255,255,.3);margin-top:6px;max-width:260px} .hero .bar i{background:#fff}
+.hero .btn{justify-self:start;margin-top:8px;color:var(--fg);border-color:transparent;box-shadow:0 3px 0 var(--ud)}
+.hero.locked{background:var(--surface);color:var(--fg);border:2px dashed var(--line);box-shadow:none}
+.hero.locked .label{color:var(--muted)} .hero.locked .deco{opacity:.07} .hero.locked .bar{background:var(--line)} .hero.locked .bar i{background:var(--muted)}
+/* レッスンの道筋 */
+.path{position:relative;display:grid}
+.path svg.rail{position:absolute;left:0;top:0;pointer-events:none}
+.path svg.rail path{fill:none;stroke:var(--line);stroke-width:6;stroke-linecap:round;stroke-dasharray:1 14}
+.node{position:relative;display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:center;height:88px;text-align:left;border:0;background:none;padding:0;margin-left:calc(var(--x)*1px)}
+.node .dot{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-num);font-size:1.3rem;font-weight:700;
+  background:var(--surface);border:3px solid var(--line);color:var(--muted);box-shadow:0 5px 0 var(--line-d);transition:transform .08s,box-shadow .08s}
+.node.open .dot{border-color:var(--ut);color:var(--ut)}
+.node.done .dot{background:var(--u);border-color:var(--u);color:#fff;box-shadow:0 5px 0 var(--ud)}
+.node.next .dot{background:var(--u);border-color:var(--u);color:#fff;box-shadow:0 5px 0 var(--ud);animation:pulse 1.8s infinite}
+.node:active:not(:disabled) .dot{transform:translateY(4px);box-shadow:none}
 .node:disabled{cursor:default}
+.node .name{min-width:0;font-weight:700;line-height:1.4}
 .node:disabled .name{color:var(--muted)}
-.node .name{min-width:0;font-weight:700}
 .node .name small{display:block;font-weight:400;color:var(--muted)}
-.node .here{display:inline-block;font-size:.75rem;background:var(--accent-soft);color:var(--fg);border-radius:999px;padding:0 10px;margin-left:6px;font-weight:400}
+.node .here{display:inline-block;font-size:.72rem;background:var(--u);color:#fff;border-radius:999px;padding:0 10px;margin-left:6px;vertical-align:2px}
+.stars{color:var(--line);letter-spacing:2px;font-size:.9rem} .stars b{color:var(--star);font-weight:400}
+@keyframes pulse{0%{outline:0 solid color-mix(in srgb,var(--u) 45%,transparent)}70%{outline:12px solid transparent}100%{outline:0 solid transparent}}
+.node.next .dot{outline-offset:0}
 
 /* レッスンの前 */
 .vocab{display:grid;gap:2px}
-.vrow{display:grid;grid-template-columns:44px 1fr;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.vrow{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
 .vrow:last-child{border-bottom:0}
 .vrow .k{font-size:1.2rem;font-weight:700}
 .rd{color:var(--muted);font-size:.85rem}
-.tip{border-left:4px solid var(--accent);padding-left:12px}
+.tip{background:var(--accent-soft);border-radius:14px;padding:12px 14px}
 
 /* 出題 */
 .qbar{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
@@ -102,48 +132,64 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .prompt:empty{display:none}
 .prompt .big{font-size:1.9rem;font-weight:700;line-height:1.4}
 .prompt .big.ja{font-size:1.3rem}
-.prompt .big.letter{font-size:3rem}
+.prompt .big.letter{font-size:3.4rem}
 .say{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;min-height:40px}
-.say.big{padding:16px 22px;font-size:1.05rem;border-color:var(--accent);color:var(--accent)}
-.opts{display:grid;gap:10px}
+.say.big{padding:18px 26px;font-size:1.05rem;font-weight:700;border:0;background:var(--accent);color:var(--accent-fg);box-shadow:0 4px 0 var(--accent-d);border-radius:18px}
+.opts{display:grid;gap:12px}
 .opts.two,.opts.pairs{grid-template-columns:1fr 1fr}
-.opt{display:grid;gap:0;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;min-height:52px;align-content:center}
-.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt{display:grid;gap:0;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:11px 14px;min-height:54px;align-content:center;box-shadow:0 3px 0 var(--line-d);transition:transform .08s,box-shadow .08s}
 .opt .t{font-size:1.05rem;font-weight:700;overflow-wrap:anywhere}
 .opt .t.ko{font-size:1.3rem}
 .opt:disabled{cursor:default}
-.opt.right{border-color:var(--ok);background:var(--ok-soft)}
-.opt.wrong{border-color:var(--ng);background:var(--ng-soft)}
-.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
-.opt.gone{opacity:.35}
+.opt.right{border-color:var(--ok);background:var(--ok-soft);box-shadow:0 3px 0 var(--ok);animation:pop .3s}
+.opt.wrong{border-color:var(--ng);background:var(--ng-soft);box-shadow:0 3px 0 var(--ng);animation:shake .35s}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 3px 0 var(--accent)}
+.opt.gone{opacity:.35;animation:none;box-shadow:none}
+@keyframes pop{50%{transform:scale(1.04)}}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 .blank{display:inline-block;min-width:3em;border-bottom:3px solid var(--accent);text-align:center;color:var(--accent)}
-.line{min-height:64px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;padding-bottom:8px}
+.line{min-height:66px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;padding-bottom:10px}
 .bank{display:flex;flex-wrap:wrap;gap:8px;min-height:60px}
-.tile{display:grid;border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px;text-align:center;min-height:44px;align-content:center}
+.tile{display:grid;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;text-align:center;min-height:46px;align-content:center;box-shadow:0 3px 0 var(--line-d);transition:transform .08s,box-shadow .08s}
 .tile .ko{font-size:1.2rem;font-weight:700}
 .tile.used{visibility:hidden}
-.feedback{border-radius:14px;padding:14px 16px;display:grid;gap:8px}
-.feedback.ok{background:var(--ok-soft)} .feedback.ng{background:var(--ng-soft)}
-.verdict{font-weight:700;font-size:1.1rem}
-.feedback.ok .verdict{color:var(--ok)} .feedback.ng .verdict{color:var(--ng)}
-.answer{display:grid;gap:0}
-.answer .ko{font-size:1.3rem;font-weight:700}
+/* 正誤のパネル（画面下に固定。出ている間は本文の下に同じだけ余白を取る） */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:5;border-top:2px solid var(--line);padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));animation:rise .2s}
+.sheet.ok{background:var(--ok-soft);border-color:var(--ok)} .sheet.ng{background:var(--ng-soft);border-color:var(--ng)}
+.sheet .in{max-width:608px;margin:0 auto;display:grid;gap:10px}
+.sheet .top{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.verdict{font-weight:700;font-size:1.15rem}
+.sheet.ok .verdict{color:var(--ok)} .sheet.ng .verdict{color:var(--ng)}
+.answer{display:grid;gap:0;min-width:0}
+.answer .ko{font-size:1.25rem;font-weight:700}
+.sheetpad{height:230px}
+@keyframes rise{from{transform:translateY(30%);opacity:0}}
 
-/* 結果・設定 */
-.score{display:flex;flex-wrap:wrap;gap:24px;align-items:baseline}
-.score .big{font-family:var(--font-num);font-size:2.6rem;line-height:1;color:var(--gold);font-weight:700}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+/* 結果・設定・名前 */
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.score .cell{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 8px;text-align:center;display:grid;gap:2px;justify-items:center;align-content:start}
+.score .v{font-family:var(--font-num);font-size:1.7rem;font-weight:700;line-height:1.2}
+.score .xp .v{color:var(--gold)}
+.goalrow{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .seg button{border:0;background:var(--surface);padding:8px 14px;min-height:44px;border-right:1px solid var(--line)}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);font-weight:700}
 .setrow{display:grid;gap:6px}
-@media (max-width:420px){ .opts.two{grid-template-columns:1fr} .node{margin-left:calc(var(--x)*18px)} .prompt .big{font-size:1.6rem} }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.field{min-height:46px;border:2px solid var(--line);border-radius:14px;background:var(--surface);padding:0 14px;min-width:0;flex:1 1 180px}
+.namecard{display:grid;gap:14px;justify-items:center;text-align:center;padding-top:8vh}
+.namecard .field{width:100%;max-width:320px;flex:none;text-align:center;font-size:1.15rem}
+.namecard .btn.primary{width:100%;max-width:320px}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9}
+.confetti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (max-width:420px){ h1{font-size:1.05rem} .pill{padding:4px 9px 4px 6px} .prompt .big{font-size:1.6rem} .score .v{font-size:1.4rem} .hero .deco{font-size:6.5rem} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-1.500.500-2.500 1.500-3.500C10 9 12 7 12 3z"/><path d="M12 21a7 7 0 0 0 7-7c0-2-1-4-2-5"/><path d="M5 14a7 7 0 0 0 7 7"/></symbol>
-  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.300l2-1.500-2-3.400-2.300.900a7 7 0 0 0-2.200-1.300L14 3h-4l-.400 2.400a7 7 0 0 0-2.200 1.300l-2.300-.900-2 3.400 2 1.500A7 7 0 0 0 5 12c0 .400 0 .900.100 1.300l-2 1.500 2 3.400 2.300-.900a7 7 0 0 0 2.200 1.300L10 21h4l.400-2.400a7 7 0 0 0 2.200-1.300l2.300.900 2-3.400-2-1.500c.100-.400.100-.900.100-1.300z"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 1-1 2-3 2-5z"/><path d="M12 21a7 7 0 0 0 7-7c0-2-1-4-2-5"/><path d="M5 14a7 7 0 0 0 7 7"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.500"/><circle cx="12" cy="12" r="6.500"/><path stroke-width="3.200" d="M12 2.500v3M12 18.500v3M2.500 12h3M18.500 12h3M5.300 5.300l2.100 2.100M16.600 16.600l2.100 2.100M5.300 18.700l2.100-2.100M16.600 7.400l2.100-2.100"/></symbol>
   <symbol id="i-say" viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.500 8.500a5 5 0 0 1 0 7"/><path d="M19 6a8.500 8.500 0 0 1 0 12"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7.500"/></symbol>
@@ -370,10 +416,50 @@ const Engine = (() => {
     while (state.days[d]) { n++; d--; }
     return n;
   }
-  const newState = () => ({ v: 1, done: {}, items: {}, days: {}, xp: 0, set: { reading: "rom", goal: 20, audio: true, rate: 0.85 } });
+  // name: null＝まだ聞いていない、""＝名前なしで使う。lastCheer は直前に出した労いの文（続けて同じ文を出さないため）
+  const newState = () => ({ v: 1, name: null, lastCheer: "", done: {}, items: {}, days: {}, xp: 0, set: { reading: "rom", goal: 20, audio: true, rate: 0.85 } });
+
+  // ---------- 労いの一言・あいさつ ----------
+  const KO = {
+    sugo: { ko: "수고하셨습니다", rom: "sugohasyeotseumnida", kana: "スゴハショッスムニダ", ja: "お疲れさまでした" },
+    jal: { ko: "잘했어요", rom: "jalhaesseoyo", kana: "チャルヘッソヨ", ja: "よくできました" },
+    choego: { ko: "최고예요", rom: "choegoyeyo", kana: "チェゴイェヨ", ja: "最高です" },
+    wanbyeok: { ko: "완벽해요", rom: "wanbyeokaeyo", kana: "ワンビョケヨ", ja: "完璧です" },
+    daedan: { ko: "대단해요", rom: "daedanhaeyo", kana: "テダンヘヨ", ja: "すごいです" },
+    chuka: { ko: "축하해요", rom: "chukahaeyo", kana: "チュカヘヨ", ja: "おめでとう" },
+    gwaen: { ko: "괜찮아요", rom: "gwaenchanayo", kana: "クェンチャナヨ", ja: "大丈夫です" },
+    paiting: { ko: "파이팅", rom: "paiting", kana: "パイティン", ja: "がんばれ" },
+  };
+  const STREAK_MARKS = [3, 7, 14, 21, 30, 50, 75, 100, 150, 200, 300, 365];
+  // 場面ごとの文。{n} は連続日数に置き換える。mood はマスコットの表情
+  const CHEERS = {
+    jumpPass: { mood: "happy", ko: "chuka", texts: ["飛び級合格です。これまでの積み重ねが出ましたね。", "お見事、合格です。先のユニットを開けました。", "合格です。ここまでの内容はもう身についています。"] },
+    jumpFail: { mood: "cheer", ko: "gwaen", texts: ["挑戦おつかれさまでした。もう少し進めてからまた受けましょう。", "惜しかったです。挑んだ分だけ、次は近づいています。", "今回は届きませんでしたが、弱いところが見えたのは収穫です。"] },
+    streak: { mood: "happy", ko: "daedan", texts: ["{n}日連続です。続ける力がいちばんの才能です。", "{n}日続きました。毎日の積み重ねが形になっています。", "連続{n}日、達成です。この調子でいきましょう。"] },
+    goal: { mood: "happy", ko: "sugo", texts: ["今日の目標を達成しました。おつかれさまでした。", "今日の分はこれで完了です。よくがんばりました。", "目標クリアです。今日もきちんとやり遂げましたね。"] },
+    perfect: { mood: "happy", ko: "wanbyeok", texts: ["全問正解です。すばらしい集中力でした。", "ひとつも間違えませんでした。お見事です。", "満点です。しっかり身についていますね。"] },
+    good: { mood: "happy", ko: "jal", texts: ["おつかれさまでした。よくできています。", "いい調子です。着実に力がついています。", "おつかれさまでした。この正答率なら安心です。", "よくがんばりました。次もこの調子でいきましょう。"] },
+    ok: { mood: "normal", ko: "sugo", texts: ["おつかれさまでした。間違えた言葉は復習でまた出します。", "最後までやり切りましたね。おつかれさまでした。", "おつかれさまでした。少しずつ確実に進んでいます。"] },
+    hard: { mood: "cheer", ko: "paiting", texts: ["難しい回でしたね。最後までやり切ったのが立派です。", "おつかれさまでした。間違えた分だけ、次は覚えやすくなります。", "苦戦しても投げ出さなかったのが何よりです。おつかれさまでした。"] },
+  };
+  // r = {kind:"lesson"|"practice"|"jump", pass, acc:0〜1, streak, streakUp, goalHit}。優先順に場面を決め、last と違う文を選ぶ
+  function cheer(r, last, rng) {
+    const cat = r.kind === "jump" ? (r.pass ? "jumpPass" : "jumpFail")
+      : r.streakUp && STREAK_MARKS.includes(r.streak) ? "streak"
+      : r.goalHit ? "goal" : r.acc >= 1 ? "perfect" : r.acc >= 0.8 ? "good" : r.acc >= 0.6 ? "ok" : "hard";
+    const c = CHEERS[cat], pool = c.texts.map(t => t.replace("{n}", r.streak)).filter(t => t !== last);
+    return { cat, mood: c.mood, text: pick(pool, rng), ko: KO[c.ko] };
+  }
+  // ホームのあいさつ。g = {hour, streak, xpToday, started:これまでに1回でも学習したか}
+  function greeting(g) {
+    if (!g.started) return "はじめまして。ハングルの母音から一緒に始めましょう。";
+    if (g.xpToday > 0) return "今日もおつかれさまです。もう1レッスン、いかがですか。";
+    const hello = g.hour < 5 ? "遅くまでおつかれさまです" : g.hour < 11 ? "おはようございます" : g.hour < 18 ? "こんにちは" : "こんばんは";
+    return g.streak > 0 ? `${hello}。${g.streak}日連続中です。今日も続けましょう。` : `${hello}。今日から、また1日目を始めましょう。`;
+  }
 
   return { init, reading, sound, readMode, bare, chunksOf, make, choice, order, cloze, match, buildLesson, buildPractice, buildJump, JUMP_MISS,
-           gradeOrder, record, weakest, isUnlocked, passJump, nextLesson, dayNum, addXp, streak, newState,
+           gradeOrder, record, weakest, isUnlocked, passJump, nextLesson, dayNum, addXp, streak, newState, cheer, greeting, CHEERS, STREAK_MARKS,
            get units() { return UNITS; }, get items() { return ITEMS; }, get lessons() { return LESSONS; }, get order_() { return ORDER; }, get all() { return ALL; } };
 })();
 if (typeof module !== "undefined") module.exports = Engine;
@@ -390,12 +476,34 @@ load();
 const app = document.getElementById("app");
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const icon = n => `<svg class="icon" aria-hidden="true"><use href="#i-${n}"/></svg>`;
-const today = () => Engine.dayNum(new Date(Date.now() + (window.__dayOffset || 0) * 864e5));   // __dayOffset は動作確認用
+const now = () => new Date(Date.now() + (window.__dayOffset || 0) * 864e5);   // __dayOffset は動作確認用
+const today = () => Engine.dayNum(now());
 const I = id => Engine.items[id];
 const READING = { rom: "ローマ字", kana: "カタカナ", off: "なし" };
 const rd = it => Engine.reading(it, state.set.reading);
 const koHtml = (it, cls = "") => `<span class="ko ${cls}" lang="ko">${esc(it.ko)}</span>`;
 const rdHtml = it => rd(it) ? `<span class="rd">${esc(rd(it))}</span>` : "";
+const who = () => state.name ? esc(state.name) + "さん" : "";
+const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ユニットのテーマ色（文字／入門／文の骨組み／場面）と、見出しに飾るハングル1文字
+const themeOf = ui => ui < 4 ? 0 : ui < 8 ? 1 : ui < 14 ? 2 : 3;
+const DECO = ["아", "가", "까", "한", "안", "저", "이", "일", "는", "있", "해", "안", "었", "왜", "주", "시", "가", "길", "싶", "말"];
+
+// マスコット（虎の子）。mood: normal / happy / cheer
+function tiger(mood, size){
+  const K = `fill="none" stroke="#3a2a1a" stroke-width="3.500" stroke-linecap="round"`;
+  const eyes = mood === "happy" ? `<path d="M29 47q6-7 12 0M59 47q6-7 12 0" ${K}/>`
+    : `<circle cx="35" cy="45" r="4.500" fill="#3a2a1a"/><circle cx="65" cy="45" r="4.500" fill="#3a2a1a"/>` + (mood === "cheer" ? `<path d="M27 35l13 4M73 35l-13 4" ${K}/>` : "");
+  const mouth = mood === "happy" ? `<path d="M41 64q9 13 18 0z" fill="#b5452f"/>` : mood === "cheer" ? `<ellipse cx="50" cy="68" rx="5" ry="4.500" fill="#b5452f"/>` : `<path d="M43 65q7 6 14 0" ${K}/>`;
+  return `<svg class="tiger" width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="21" cy="23" r="14" fill="#f2a03d"/><circle cx="79" cy="23" r="14" fill="#f2a03d"/><circle cx="21" cy="23" r="6.500" fill="#fde2c4"/><circle cx="79" cy="23" r="6.500" fill="#fde2c4"/>
+    <ellipse cx="50" cy="54" rx="41" ry="37" fill="#f2a03d"/>
+    <path d="M50 18v11M37 20l3 10M63 20l-3 10M10 52h10M12 65l9-3M90 52H80M88 65l-9-3" ${K}/>
+    <ellipse cx="50" cy="66" rx="21" ry="16" fill="#fff3dc"/><circle cx="24" cy="60" r="6" fill="#f47c6a" opacity=".45"/><circle cx="76" cy="60" r="6" fill="#f47c6a" opacity=".45"/>
+    <path d="M44 55h12l-6 7z" fill="#3a2a1a"/>${eyes}${mouth}</svg>`;
+}
+const ring = (pct, size) => `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="15" fill="none" stroke-width="5"/><circle class="fg" cx="18" cy="18" r="15" fill="none" stroke-width="5" stroke-linecap="round" pathLength="100" stroke-dasharray="${Math.max(0, Math.min(100, pct))} 100"/></svg>`;
 
 // ---------- 音声（端末の読み上げ機能。韓国語の声が無い端末では聞き取り問題を出さない） ----------
 let koVoice = null;
@@ -408,7 +516,24 @@ function speak(text){
 }
 const sayBtn = (ko, big) => canSpeak() ? `<button class="say ${big ? "big" : ""}" data-say="${esc(ko)}" aria-label="音声を聞く">${icon("say")}${big ? "<span>聞く</span>" : ""}</button>` : "";
 
-let view = "home", showSettings = false;
+let view = "home", showSettings = false, curUnit = 0;
+
+// ---------- 名前（初回だけ聞く。設定で変えられる） ----------
+function renderName(){
+  view = "name";
+  app.innerHTML = `<section class="namecard">${tiger("happy", 120)}
+    <h2>はじめまして！</h2>
+    <p>お名前（呼び名）を教えてください。<br>レッスンのあとに声をかけます。</p>
+    <input class="field" id="nameinput" maxlength="20" autocomplete="nickname" placeholder="例: たろう" aria-label="お名前">
+    <button class="btn primary" id="namesave">はじめる</button>
+    <button class="btn link" id="nameskip">名前なしで始める</button>
+  </section>`;
+}
+const cleanName = s => String(s).replace(/\s+/g, " ").trim().slice(0, 20);
+const frontier = () => { const n = Engine.nextLesson(state); return n ? Engine.lessons[n].ui : Engine.units.length - 1; };
+const clearConfetti = () => document.querySelectorAll(".confetti").forEach(c => c.remove());
+function goHome(ui){ clearConfetti(); curUnit = ui === undefined ? frontier() : ui; showSettings = false; renderHome(); window.scrollTo(0, 0); }
+function boot(){ state.name === null ? renderName() : goHome(); }
 
 // ---------- ホーム ----------
 function headHtml(){
@@ -416,8 +541,8 @@ function headHtml(){
   return `<header class="head">
     <h1>韓国語レッスン</h1>
     <div class="stats">
-      <div class="stat streak ${state.days[day] ? "" : "off"}" title="連続日数">${icon("flame")}<span class="num" id="streak">${st}</span><span class="small">日</span></div>
-      <div class="goal" title="今日のXP"><div class="small"><span class="num" id="xptoday">${xp}</span> / <span class="num">${goal}</span> XP</div><div class="bar gold"><i style="width:${Math.min(100, xp / goal * 100)}%"></i></div></div>
+      <div class="pill streak ${state.days[day] ? "" : "off"}" title="連続日数">${icon("flame")}<span class="num" id="streak">${st}</span><span class="small">日</span></div>
+      <div class="pill" title="今日のXP（目標 ${goal}）">${ring(xp / goal * 100, 28)}<span class="num" id="xptoday">${xp}</span><span class="small muted">/${goal}</span></div>
       <button class="iconbtn" id="gear" aria-label="設定" aria-expanded="${showSettings}">${icon("gear")}</button>
     </div>
   </header>`;
@@ -429,6 +554,7 @@ function settingsHtml(){
     : koVoice ? `韓国語の音声: ${esc(koVoice.name)}` : "この端末には韓国語の音声が見つかりません。聞き取り問題は出ません。";
   return `<section class="card stack" id="settings">
     <h2>設定</h2>
+    <div class="setrow"><div class="label">お名前</div><div class="row"><input class="field" id="setname" maxlength="20" value="${esc(state.name || "")}" placeholder="名前なし" aria-label="お名前"><button class="btn" id="setnamesave">変更</button></div></div>
     <div class="setrow"><div class="label">読みがな</div>${seg("reading", [["rom", "ローマ字"], ["kana", "カタカナ"], ["off", "なし"]])}</div>
     <div class="setrow"><div class="label">音声</div><div class="row">${seg("audio", [[true, "あり"], [false, "なし"]])}${seg("rate", [[0.65, "ゆっくり"], [0.85, "ふつう"], [1, "速め"]])}</div><div class="small muted">${voice}</div></div>
     <div class="setrow"><div class="label">1日の目標</div>${seg("goal", [[10, "10 XP"], [20, "20 XP"], [40, "40 XP"], [60, "60 XP"]])}<div class="small muted">1レッスンでおよそ15〜20 XP。合計 <span class="num">${state.xp}</span> XP</div></div>
@@ -436,36 +562,49 @@ function settingsHtml(){
   </section>`;
 }
 
+const ROW = 88, DOT = 64, XS = [0, 44, 88, 44, 0];
 function renderHome(){
   view = "home";
-  const next = Engine.nextLesson(state), seen = Object.keys(state.items).length;
-  const units = Engine.units.map((u, ui) => {
-    const open = Engine.isUnlocked(state, u.lessons[0].id), done = u.lessons.filter(l => state.done[l.id]).length;
-    return `<section class="unit">
-      <div class="unithead ${open ? "" : "locked"}">
-        <div class="label">ユニット <span class="num">${u.unit}</span>　<span class="num">${done}</span> / <span class="num">${u.lessons.length}</span></div>
-        <h2>${esc(u.title)}</h2><div class="small">${esc(u.desc)}</div>
-        ${open ? "" : `<button class="btn" data-jump="${ui}">ここまで飛び級する</button>`}
+  const day = today(), next = Engine.nextLesson(state), seen = Object.keys(state.items).length;
+  const U = Engine.units, u = U[curUnit], th = themeOf(curUnit);
+  const open = Engine.isUnlocked(state, u.lessons[0].id), doneN = x => x.lessons.filter(l => state.done[l.id]).length;
+  const hello = Engine.greeting({ hour: now().getHours(), streak: Engine.streak(state, day), xpToday: state.days[day] || 0, started: state.xp > 0 });
+  const rail = "M" + XS.map((x, i) => `${x + DOT / 2} ${ROW * i + ROW / 2}`).join(" L");
+  app.innerHTML = headHtml()
+    + `<section class="talk">${tiger("normal", 68)}<div class="bubble" id="hello">${who() ? `<span class="who">${who()}、</span>` : ""}<span>${esc(hello)}</span></div></section>`
+    + (showSettings ? settingsHtml() : "")
+    + (seen >= 6 ? `<section class="card row" style="justify-content:space-between"><div><h3>復習</h3><div class="small muted">間違えた言葉・久しぶりの言葉から12問</div></div><button class="btn primary" id="practice">復習する</button></section>` : "")
+    + `<div class="picker">
+        <button class="btn" id="uprev" aria-label="前のユニット" ${curUnit ? "" : "disabled"}>‹</button>
+        <select id="unitsel" aria-label="ユニットを選ぶ">${U.map((x, i) => `<option value="${i}" ${i === curUnit ? "selected" : ""}>${x.unit}. ${esc(x.title)}（${doneN(x)}/${x.lessons.length}）${Engine.isUnlocked(state, x.lessons[0].id) ? "" : " 🔒"}</option>`).join("")}</select>
+        <button class="btn" id="unext" aria-label="次のユニット" ${curUnit < U.length - 1 ? "" : "disabled"}>›</button>
       </div>
-      <div class="path">${u.lessons.map((l, i) => {
-        const ok = Engine.isUnlocked(state, l.id), d = state.done[l.id];
-        return `<button class="node ${d ? "done" : ok ? "open" : ""} ${l.id === next ? "next" : ""}" style="--x:${[0, 1, 2, 1, 0][i]}" data-lesson="${l.id}" ${ok ? "" : "disabled"}>
-          <span class="dot">${d ? icon("check") : ok ? i + 1 : icon("lock")}</span>
-          <span class="name">${esc(l.title)}${l.id === next ? `<span class="here">ここから</span>` : ""}<small>${d ? `${d}回 学習済み` : ok ? "タップして始める" : "前のレッスンを終えると開きます"}</small></span>
-        </button>`;
-      }).join("")}</div>
-    </section>`;
-  }).join("");
-  app.innerHTML = headHtml() + (showSettings ? settingsHtml() : "")
-    + (seen >= 6 ? `<section class="card row" style="justify-content:space-between"><div><h3>復習</h3><div class="small muted">間違えた言葉・しばらく見ていない言葉から12問</div></div><button class="btn primary" id="practice">復習する</button></section>` : "")
-    + units;
+      <section class="th${th} stack" id="unit">
+        <div class="hero ${open ? "" : "locked"}">
+          <span class="deco" lang="ko" aria-hidden="true">${DECO[curUnit] || ""}</span>
+          <div class="label">ユニット <span class="num">${u.unit}</span></div>
+          <h2>${esc(u.title)}</h2><div class="small">${esc(u.desc)}</div>
+          <div class="bar"><i style="width:${doneN(u) / u.lessons.length * 100}%"></i></div>
+          ${open ? "" : `<div class="small">前のユニットを終えると開きます。もう知っている内容なら、テストで先に進めます。</div><button class="btn" data-jump="${curUnit}">ここまで飛び級する</button>`}
+        </div>
+        <div class="path">
+          <svg class="rail" width="${XS[2] + DOT}" height="${ROW * 5}" aria-hidden="true"><path d="${rail}"/></svg>
+          ${u.lessons.map((l, i) => {
+            const ok = Engine.isUnlocked(state, l.id), d = state.done[l.id] || 0, n = Math.min(d, 3);
+            return `<button class="node ${d ? "done" : ok ? "open" : ""} ${l.id === next ? "next" : ""}" style="--x:${XS[i]}" data-lesson="${l.id}" ${ok ? "" : "disabled"}>
+              <span class="dot">${d ? icon("check") : ok ? i + 1 : icon("lock")}</span>
+              <span class="name">${esc(l.title)}${l.id === next ? `<span class="here">ここから</span>` : ""}<small>${d ? `<span class="stars" aria-label="${d}回 学習済み"><b>${"★".repeat(n)}</b>${"★".repeat(3 - n)}</span>` : ok ? "タップして始める" : "前のレッスンを終えると開きます"}</small></span>
+            </button>`;
+          }).join("")}
+        </div>
+      </section>`;
 }
 
 // ---------- レッスンの前（新しい言葉の一覧） ----------
 function renderIntro(lessonId){
-  view = "intro";
+  view = "intro"; clearConfetti();
   const l = Engine.lessons[lessonId], u = Engine.units[l.ui];
-  app.innerHTML = `<div class="row"><button class="btn" id="back">もどる</button><button class="rtoggle" id="rtoggle">読みがな: ${READING[state.set.reading]}</button></div>
+  app.innerHTML = `<div class="row" style="justify-content:space-between"><button class="btn" id="back">もどる</button><button class="rtoggle" id="rtoggle">読みがな: ${READING[state.set.reading]}</button></div>
     <div><div class="label">ユニット ${u.unit}　${esc(u.title)}</div><h2>${esc(l.title)}</h2></div>
     <p class="tip">${esc(l.tip)}</p>
     <section class="card vocab">${l.items.map(it => `<div class="vrow">${sayBtn(it.ko) || "<span></span>"}<div><div class="k">${koHtml(it)}</div><div>${rdHtml(it)}${it.ja ? `${rd(it) ? "　" : ""}${esc(it.ja)}` : ""}</div></div></div>`).join("")}</section>
@@ -478,12 +617,12 @@ function renderIntro(lessonId){
 const INSTR = { ko2ja: "意味を選んでください", ja2ko: "韓国語を選んでください", lis2ko: "聞こえた韓国語を選んでください", lis2ja: "聞こえた言葉の意味を選んでください",
   read: "読み方を選んでください", read2ko: "この読み方の文字を選んでください", match: "ペアを作ってください", order: "韓国語に並べてください",
   lisorder: "聞こえたとおりに並べてください", cloze: "空欄に入るものを選んでください" };
-let Q = null;   // {kind, lessonId, ui, list, i, total, first:{正解数,問題数}, missed:Set, miss, a:今の問題の回答状態}
+let Q = null;   // {kind, arg, list, i, total, ok, n, missed, miss, xp0:始める前の今日のXP, st0:始める前の連続日数, a:今の問題の回答状態}
 
 function startSession(kind, arg){
   const o = { mode: state.set.reading, audio: canSpeak(), rng: Math.random, day: today() };
   const list = kind === "lesson" ? Engine.buildLesson(arg, state, o) : kind === "jump" ? Engine.buildJump(arg, o) : Engine.buildPractice(state, o);
-  if(!list.length) return renderHome();
+  if(!list.length) return goHome(curUnit);
   Q = { kind, arg, list, i: 0, total: list.length, ok: 0, n: 0, missed: [], miss: 0, a: null };
   newQuestion();
 }
@@ -546,8 +685,9 @@ function feedbackHtml(ex){
     const it = I(ex.id);
     ans = `<div class="answer"><div class="row">${koHtml(it)}${sayBtn(it.ko)}</div>${rdHtml(it)}${it.ja ? `<div>${esc(it.ja)}</div>` : ""}${it.note ? `<div class="small muted">${esc(it.note)}</div>` : ""}</div>`;
   }
-  return `<section class="feedback ${a.ok ? "ok" : "ng"}" id="feedback"><div class="verdict">${a.ok ? "正解！" : ex.type === "match" ? "間違えたペアがありました" : "不正解"}</div>${ans}
-    <button class="btn primary wide" id="next">${last ? "結果を見る" : "次へ"}</button></section>`;
+  return `<div class="sheetpad"></div><section class="sheet ${a.ok ? "ok" : "ng"}" id="feedback"><div class="in">
+    <div class="top">${tiger(a.ok ? "happy" : "cheer", 52)}<div><div class="verdict">${a.ok ? "正解！" : ex.type === "match" ? "間違えたペアがありました" : "不正解"}</div>${ans}</div></div>
+    <button class="btn primary wide" id="next">${last ? "結果を見る" : "次へ"}</button></div></section>`;
 }
 
 function renderQuestion(){
@@ -562,7 +702,7 @@ function renderQuestion(){
     ${feedbackHtml(ex)}`;
 }
 
-// 回答を確定する。ids は成績を付ける教材（ペア合わせは複数）
+// 回答を確定する。marks は成績を付ける教材（ペア合わせは複数）
 function finish(ok, marks){
   const ex = Q.list[Q.i], a = Q.a, day = today();
   a.done = true; a.ok = ok;
@@ -575,8 +715,7 @@ function finish(ok, marks){
   save();
   renderQuestion();
   if(ex.type !== "match") speak(I(ex.id).ko);
-  const fb = document.getElementById("next"); if(fb) fb.focus({ preventScroll: true });
-  document.getElementById("feedback").scrollIntoView({ block: "nearest" });
+  const nb = document.getElementById("next"); if(nb) nb.focus({ preventScroll: true });
 }
 
 function tapMatch(key){
@@ -599,52 +738,87 @@ function nextStep(){
   renderResult();
 }
 
-// ---------- 結果 ----------
+// ---------- 結果（名前＋労いの一言） ----------
+let afterUnit;
+function confetti(){
+  if(calm()) return;
+  const box = document.createElement("div"); box.className = "confetti";
+  const colors = ["#f2a03d", "#0f7b6c", "#2563a8", "#6b4aa8", "#e2a100", "#ee7f76"];
+  box.innerHTML = Array.from({ length: 36 }, (_, k) => `<i style="left:${Math.random() * 100}%;background:${colors[k % colors.length]};animation-duration:${1.6 + Math.random() * 1.6}s;animation-delay:${Math.random() * 0.5}s"></i>`).join("");
+  document.body.appendChild(box); setTimeout(() => box.remove(), 4000);
+}
+function countUp(el, to){
+  if(calm() || !to){ el.textContent = "+" + to; return; }
+  const t0 = performance.now(), step = t => { const p = Math.min(1, (t - t0) / 700); el.textContent = "+" + Math.round(to * p); if(p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
 function renderResult(){
   view = "result";
-  const day = today(), before = Engine.streak(state, day);
-  let xp = Q.ok, title = "レッスン完了", note = "";
-  if(Q.kind === "lesson"){ xp += 5; state.done[Q.arg] = (state.done[Q.arg] || 0) + 1; }
-  else if(Q.kind === "practice") title = "復習完了";
+  const day = today(), before = Engine.streak(state, day), xp0 = state.days[day] || 0, goal = state.set.goal;
+  let xp = Q.ok, title = "レッスン完了", note = "", pass = false;
+  if(Q.kind === "lesson"){
+    const wasNext = Engine.nextLesson(state) === Q.arg;
+    xp += 5; state.done[Q.arg] = (state.done[Q.arg] || 0) + 1;
+    afterUnit = wasNext ? frontier() : Engine.lessons[Q.arg].ui;      // 先頭のレッスンを終えたら次のユニットへ、やり直しなら同じユニットへ戻る
+  }
+  else if(Q.kind === "practice"){ title = "復習完了"; afterUnit = curUnit; }
   else {
-    const pass = Q.miss <= Engine.JUMP_MISS;
+    pass = Q.miss <= Engine.JUMP_MISS;
     title = pass ? "飛び級 合格" : "飛び級 不合格";
     note = pass ? "ここまでのレッスンを開きました。" : `間違いは${Engine.JUMP_MISS}問までです（今回 ${Q.miss}問）。前のユニットを進めてからもう一度どうぞ。`;
     if(pass){ Engine.passJump(state, Q.arg); xp += 10; } else xp = 0;
+    afterUnit = pass ? Q.arg : curUnit;
   }
   if(xp) Engine.addXp(state, xp, day);
+  const st = Engine.streak(state, day), todayXp = state.days[day] || 0, acc = Q.n ? Q.ok / Q.n : 0;
+  const ch = Engine.cheer({ kind: Q.kind, pass, acc, streak: st, streakUp: st > before, goalHit: xp0 < goal && todayXp >= goal }, state.lastCheer, Math.random);
+  state.lastCheer = ch.text;
   save();
-  const st = Engine.streak(state, day), todayXp = state.days[day] || 0, goal = state.set.goal;
   const missed = [...new Set(Q.missed)].map(I);
-  const next = Engine.nextLesson(state);
+  const next = Engine.nextLesson(state), kr = Engine.reading(ch.ko, state.set.reading);
   app.innerHTML = headHtml() + `
     <h2 id="resulttitle">${title}</h2>
+    <section class="talk">${tiger(ch.mood, 92)}<div class="bubble" id="cheer">
+      <div>${who() ? `<span class="who">${who()}、</span>` : ""}<span id="cheertext">${esc(ch.text)}</span></div>
+      <div class="kline">${sayBtn(ch.ko.ko)}<span><b class="ko" lang="ko">${esc(ch.ko.ko)}</b>${kr ? ` <span class="rd">${esc(kr)}</span>` : ""}<span class="small muted ja">${esc(ch.ko.ja)}</span></span></div>
+    </div></section>
     ${note ? `<p>${note}</p>` : ""}
     <section class="score">
-      <div><div class="label">獲得</div><div><span class="big" id="gotxp">+${xp}</span> XP</div></div>
-      <div><div class="label">正答率</div><div class="num" style="font-size:1.6rem">${Q.n ? Math.round(Q.ok / Q.n * 100) : 0}%</div></div>
-      <div><div class="label">連続</div><div class="num" style="font-size:1.6rem">${st}日${st > before ? "　↑" : ""}</div></div>
+      <div class="cell xp"><div class="label">獲得XP</div><div class="v" id="gotxp" data-xp="${xp}">+${xp}</div></div>
+      <div class="cell"><div class="label">正答率</div><div class="v">${Math.round(acc * 100)}%</div></div>
+      <div class="cell"><div class="label">連続</div><div class="v">${st}<span class="small">日</span></div></div>
     </section>
-    <p class="small muted">${todayXp >= goal ? "今日の目標を達成しました。" : `今日の目標まであと ${goal - todayXp} XP。`}</p>
+    <section class="card goalrow">${ring(todayXp / goal * 100, 52)}<div><div><b>今日 <span class="num">${todayXp}</span> / <span class="num">${goal}</span> XP</b></div>
+      <div class="small muted">${todayXp >= goal ? "今日の目標を達成しました。" : `今日の目標まであと ${goal - todayXp} XP。`}</div></div></section>
     ${missed.length ? `<section class="card vocab"><h3>間違えた言葉</h3>${missed.map(it => `<div class="vrow">${sayBtn(it.ko) || "<span></span>"}<div><div class="k">${koHtml(it)}</div><div>${rdHtml(it)}${it.ja ? `${rd(it) ? "　" : ""}${esc(it.ja)}` : ""}</div></div></div>`).join("")}</section>` : ""}
     <div class="row">${next && Q.kind === "lesson" ? `<button class="btn primary" id="gonext" data-lesson="${next}">次のレッスンへ</button>` : ""}<button class="btn" id="home">道筋にもどる</button></div>`;
+  countUp(document.getElementById("gotxp"), xp);
+  if(ch.mood === "happy") confetti();
   Q = null;
   window.scrollTo(0, 0);
 }
 
 // ---------- 操作 ----------
+function saveName(id){ state.name = cleanName(document.getElementById(id).value); save(); }
 app.addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
   if(b.dataset.say !== undefined) return speak(b.dataset.say);
+  if(b.id === "namesave"){ saveName("nameinput"); return goHome(); }
+  if(b.id === "nameskip"){ state.name = ""; save(); return goHome(); }
+  if(b.id === "setnamesave"){ saveName("setname"); return renderHome(); }
   if(b.id === "gear"){ showSettings = !showSettings; return renderHome(); }
+  if(b.id === "uprev" || b.id === "unext"){ curUnit += b.id === "unext" ? 1 : -1; return renderHome(); }
   if(b.dataset.set){
     const k = b.dataset.set, v = b.dataset.val;
     state.set[k] = k === "reading" ? v : k === "audio" ? v === "true" : +v;
     save(); return renderHome();
   }
-  if(b.id === "reset"){ document.getElementById("resetbox").innerHTML = `<span class="small">連続日数もXPも消えます。</span><button class="btn" id="reset2">消す</button><button class="btn" id="reset0">やめる</button>`; return; }
-  if(b.id === "reset2"){ const set = state.set; state = Engine.newState(); state.set = set; save(); return renderHome(); }
-  if(b.id === "reset0" || b.id === "home" || b.id === "back") return renderHome();
+  if(b.id === "reset"){ document.getElementById("resetbox").innerHTML = `<span class="small">連続日数もXPも消えます（お名前と設定は残ります）。</span><button class="btn" id="reset2">消す</button><button class="btn" id="reset0">やめる</button>`; return; }
+  if(b.id === "reset2"){ const keep = { set: state.set, name: state.name }; state = Object.assign(Engine.newState(), keep); save(); return goHome(); }
+  if(b.id === "reset0") return renderHome();
+  if(b.id === "home") return goHome(afterUnit);
+  if(b.id === "back") return goHome(curUnit);
   if(b.id === "rtoggle"){
     const order = ["rom", "kana", "off"]; state.set.reading = order[(order.indexOf(state.set.reading) + 1) % 3]; save();
     return view === "intro" ? renderIntro(document.getElementById("start").dataset.lesson) : renderQuestion();
@@ -653,7 +827,7 @@ app.addEventListener("click", e => {
   if(b.dataset.jump !== undefined) return startSession("jump", +b.dataset.jump);
   if(b.id === "start") return startSession("lesson", b.dataset.lesson);
   if(b.dataset.lesson) return renderIntro(b.dataset.lesson);
-  if(b.id === "quit"){ Q = null; return renderHome(); }
+  if(b.id === "quit"){ Q = null; return goHome(curUnit); }
   if(b.id === "next") return nextStep();
   if(!Q || Q.a.done) return;
   const ex = Q.list[Q.i], a = Q.a;
@@ -666,14 +840,18 @@ app.addEventListener("click", e => {
   }
   if(b.id === "checkorder"){ const ok = Engine.gradeOrder(ex, a.line.map(k => ex.tiles[k])); return finish(ok, [[ex.id, ok]]); }
 });
+app.addEventListener("change", e => { if(e.target.id === "unitsel"){ curUnit = +e.target.value; renderHome(); } });
 document.addEventListener("keydown", e => {
-  if(view !== "quiz" || !Q || e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+  if(e.key === "Enter" && e.target.id === "nameinput") return document.getElementById("namesave").click();
+  if(e.key === "Enter" && e.target.id === "setname") return document.getElementById("setnamesave").click();
+  if(view !== "quiz" || !Q) return;
   if(e.key === "Enter"){ const b = document.getElementById("next") || document.getElementById("checkorder"); if(b && !b.disabled){ e.preventDefault(); b.click(); } return; }
   const k = "1234".indexOf(e.key); if(k < 0 || Q.a.done) return;
   const b = app.querySelector(`[data-opt="${k}"]`); if(b) b.click();
 });
 
-renderHome();
+boot();
 </script>
 <script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){var hadSW=!!navigator.serviceWorker.controller,reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadSW&&!reloaded){reloaded=true;location.reload();}});navigator.serviceWorker.register('sw.js').catch(function(){});}</script>
 </body>
